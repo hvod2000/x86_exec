@@ -130,7 +130,7 @@ class Instruction:
     def __str__(self):
         return f"{self.operation} {' '.join(self.args)}"
 
-    @classmethod
+    @staticmethod
     def parse(source):
         source = source.split(";", 1)[0] if ";" in source else source
         source = source.strip(" \t").lower()
@@ -146,7 +146,7 @@ class Instruction:
             while i < len(source) and source[i] not in ascii_lowercase:
                 i += 1
             j = i
-        operation, args = instr[0], instr[1:]
+        operation, args = instr[0], [a.strip(',') for a in instr[1:]]
         return Instruction(operation, args)
 
 
@@ -190,7 +190,7 @@ class Process:
         self.variables |= {"cl": cl, "cx": cx, "ch": ch}
         self.variables |= {"dl": dl, "dx": dx, "dh": dh}
 
-    @classmethod
+    @staticmethod
     def from_program(program):
         code = program.code
         mem_size = sum(w for v, w in program.variables.values())
@@ -217,3 +217,23 @@ class Programm:
             if line_number in labels:
                 print(labels[line_number] + ":")
             print("\t" + str(line))
+
+    @staticmethod
+    def parse(source):
+        lines = source.split("\n")
+        code, variables, labels = [], {}, {}
+        for line in map(lambda s: s.strip(" \t"), lines):
+            instruction = Instruction.parse(line)
+            if not instruction:
+                continue
+            if instruction.operation in ["mov", "cbw", "cwd", "add", "sub"]:
+                code.append(instruction)
+            elif len(instruction.args) and instruction.args[0] in ("dw", "db"):
+                code.append(None)
+                name, value = instruction.operation, instruction.args[1]
+                assert name not in variables
+                size = 2 if instruction.args[0] == "dw" else 1
+                variables[name] = (value, size)
+            else:
+                raise Exception(f"unknown instruction: {line}")
+        return Programm(code, variables, labels)
