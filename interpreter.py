@@ -34,6 +34,26 @@ class Register:
 
 
 @dataclass
+class IntValue:
+    value: int
+    size: int
+
+    def __init__(self, value, size):
+        self.value = value % 2 ** (size * 8)
+        self.size = size
+
+    def sext(self, size):
+        return IntValue(int(self), size)
+
+    def __int__(self):
+        t = 2 ** (self.size * 8 - 1)
+        return (self.value + t) % (2 * t) - t
+
+    def __str__(self):
+        return f"{int(self)}:i{self.size*8}"
+
+
+@dataclass
 class Int:
     mem: bytearray
     offset: int
