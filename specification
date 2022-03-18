@@ -1,9 +1,9 @@
 # specification
 registers:
-eax..........ax:ah......al......
-ebx..........bx:bh......bl......
-ecx..........cx:bh......cl......
-edx..........dx:dh......dl......
+al, ax, ah
+bl, bx, bh
+cl, cx, ch
+dl, dx, dh
 
 declarations:
 db # one byte of data
