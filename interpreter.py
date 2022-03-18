@@ -159,6 +159,17 @@ class Process:
         variables = sorted(self.variables.items())
         print(" ".join(f"{n}={int2str(v)}" for n, v in variables))
 
+    def initialize_registers(self):
+        mem = bytearray([0] * 8)
+        al, ax, ah = Int(mem, 0, 1), Int(mem, 0, 2), Int(mem, 1, 1)
+        bl, bx, bh = Int(mem, 2, 1), Int(mem, 2, 2), Int(mem, 3, 1)
+        cl, cx, ch = Int(mem, 4, 1), Int(mem, 4, 2), Int(mem, 5, 1)
+        dl, dx, dh = Int(mem, 6, 1), Int(mem, 6, 2), Int(mem, 7, 1)
+        self.variables |= {"al": al, "ax": ax, "ah": ah}
+        self.variables |= {"bl": bl, "bx": bx, "bh": bh}
+        self.variables |= {"cl": cl, "cx": cx, "ch": ch}
+        self.variables |= {"dl": dl, "dx": dx, "dh": dh}
+
 
 @dataclass
 class Programm:
