@@ -1,8 +1,8 @@
-from dataclasses import dataclass
+import dataclasses
 from mymath import ceil_log
 
 
-@dataclass
+@dataclasses.dataclass
 class Register:
     value: int
 
@@ -34,7 +34,7 @@ class Register:
         return f"R({self.value})"
 
 
-@dataclass
+@dataclasses.dataclass
 class IntValue:
     value: int
     size: int
@@ -67,7 +67,7 @@ class IntValue:
         return IntValue(u.value - v.value, u.size)
 
 
-@dataclass
+@dataclasses.dataclass
 class Int:
     mem: bytearray
     offset: int
@@ -107,7 +107,7 @@ def set_subreg(reg, i, value):
         reg.value32 = value
 
 
-@dataclass
+@dataclasses.dataclass
 class State:
     registers: tuple[Register]
 
@@ -121,7 +121,7 @@ class State:
             print(f"\t{name} : {self.registers[i].value}")
 
 
-@dataclass
+@dataclasses.dataclass
 class Instruction:
     operation: str
     args: list[str]
@@ -130,10 +130,10 @@ class Instruction:
         return f"{self.operation} {' '.join(self.args)}"
 
 
-@dataclass
+@dataclasses.dataclass
 class Process:
     code: list[Instruction]
-    variables: dict[str, Int | IntValue]
+    variables: dict[str, Int] = dataclasses.field(default_factory=dict)
     instruction_ptr: int = 0
 
     def step(self):
@@ -171,7 +171,7 @@ class Process:
         self.variables |= {"dl": dl, "dx": dx, "dh": dh}
 
 
-@dataclass
+@dataclasses.dataclass
 class Programm:
     code: list[Instruction]
     variables: dict[str, (int, int)]
