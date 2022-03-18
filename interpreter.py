@@ -92,9 +92,20 @@ class Instruction:
     operation: str
     args: list[str]
 
+    def __str__(self):
+        return f"{self.operation} {' '.join(self.args)}"
+
 
 @dataclass
 class Programm:
     code: list[Instruction]
     variables: dict[str, (int, int)]
     labels: dict[str, int]
+    entry: int = 0
+
+    def show(self):
+        labels = {i: label for label, i in self.labels.items()}
+        for line_number, line in enumerate(self.code):
+            if line_number in labels:
+                print(labels[line_number] + ":")
+            print("\t" + str(line))
