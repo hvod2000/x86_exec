@@ -45,6 +45,11 @@ class IntValue:
     def sext(self, size):
         return IntValue(int(self), size)
 
+    def split(self, low, hight):
+        low = IntValue(self.value, low)
+        hight = IntValue(self.value >> (self.size - hight), hight)
+        return low, hight
+
     def __int__(self):
         t = 2 ** (self.size * 8 - 1)
         return (self.value + t) % (2 * t) - t
