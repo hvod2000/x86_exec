@@ -52,6 +52,14 @@ class IntValue:
     def __str__(self):
         return f"{int(self)}:i{self.size*8}"
 
+    def __add__(u, v):
+        assert u.size == v.size
+        return IntValue(u.value + v.value, u.size)
+
+    def __sub__(u, v):
+        assert u.size == v.size
+        return IntValue(u.value - v.value, u.size)
+
 
 @dataclass
 class Int:
