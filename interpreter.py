@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from mymath import ceil_log
 
 
 @dataclass
@@ -152,6 +153,11 @@ class Process:
         elif instr.operation == "sub":
             target, source = map(lambda name: self.variables[name], instr.args)
             target.value -= source.value
+
+    def show(self):
+        int2str = lambda n: str(int(n)).ljust(ceil_log(256**n.size, 10))
+        variables = sorted(self.variables.items())
+        print(" ".join(f"{n}={int2str(v)}" for n, v in variables))
 
 
 @dataclass
