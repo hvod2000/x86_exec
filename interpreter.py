@@ -31,3 +31,13 @@ class Register:
 
     def __str__(self):
         return f"R({self.value})"
+
+
+@dataclass
+class State:
+    registers: tuple[Register]
+
+    def show(self):
+        print("registers:")
+        for i, name in enumerate("ABCD"):
+            print(f"\t{name} : {self.registers[i].value}")
