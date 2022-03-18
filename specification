@@ -1,8 +1,13 @@
+# specification
 registers:
 eax..........ax:ah......al......
 ebx..........bx:bh......bl......
 ecx..........cx:bh......cl......
 edx..........dx:dh......dl......
+
+declarations:
+db # one byte of data
+dw # two bytes of data
 
 operations:
 mov reg:part, reg:part
