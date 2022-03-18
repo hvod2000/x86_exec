@@ -1,6 +1,27 @@
 import dataclasses
 from mymath import ceil_log
-from string import ascii_lowercase
+from string import ascii_lowercase, digits
+
+
+word_chars = ascii_lowercase + digits
+
+
+def parse_tokens(line):
+    source, comment = line.split(";", 1) if ";" in line else (line, None)
+    source = source.strip().lower()
+    tokens, in_word = [], False
+    for char in source:
+        if char in word_chars:
+            if in_word:
+                tokens[-1] += char
+            else:
+                tokens.append(char)
+            in_word = True
+        else:
+            if char not in " \t":
+                tokens.append(char)
+            in_word = False
+    return tokens, comment
 
 
 @dataclasses.dataclass
@@ -128,7 +149,7 @@ class Instruction:
     args: list[str]
 
     def __str__(self):
-        return f"{self.operation} {' '.join(self.args)}"
+        return f"{self.operation} {', '.join(self.args)}"
 
     @staticmethod
     def parse(source):
@@ -140,13 +161,13 @@ class Instruction:
         j = 0
         while j < len(source):
             i = j
-            while i < len(source) and source[i] in ascii_lowercase:
+            while i < len(source) and source[i] in ascii_lowercase + ",":
                 i += 1
             instr.append(source[j:i])
             while i < len(source) and source[i] not in ascii_lowercase:
                 i += 1
             j = i
-        operation, args = instr[0], [a.strip(',') for a in instr[1:]]
+        operation, args = instr[0], [a.strip(",") for a in instr[1:]]
         return Instruction(operation, args)
 
 
@@ -222,18 +243,18 @@ class Programm:
     def parse(source):
         lines = source.split("\n")
         code, variables, labels = [], {}, {}
-        for line in map(lambda s: s.strip(" \t"), lines):
-            instruction = Instruction.parse(line)
-            if not instruction:
+        for line in lines:
+            tokens, comment = parse_tokens(line)
+            if not tokens:
                 continue
-            if instruction.operation in ["mov", "cbw", "cwd", "add", "sub"]:
-                code.append(instruction)
-            elif len(instruction.args) and instruction.args[0] in ("dw", "db"):
-                code.append(None)
-                name, value = instruction.operation, instruction.args[1]
+            elif tokens[0] in {"mov", "cbw", "cwd", "add", "sub"}:
+                code.append(Instruction(tokens[0], tokens[1::2]))
+            elif tokens[1] in {"dw", "db"}:
+                code.append(Instruction("undefined_behavour", []))
+                name, value = tokens[0], tokens[2]
                 assert name not in variables
-                size = 2 if instruction.args[0] == "dw" else 1
-                variables[name] = (value, size)
+                size = 2 if tokens[1] == "dw" else 1
+                variables[name] = (int(value), size)
             else:
                 raise Exception(f"unknown instruction: {line}")
         return Programm(code, variables, labels)
