@@ -33,6 +33,24 @@ class Register:
         return f"R({self.value})"
 
 
+@dataclass
+class Int:
+    mem: bytearray
+    offset: int
+    size: int
+
+    @property
+    def value(self):
+        mem, offset, size = self.mem, self.offset, self.size
+        return int.from_bytes(mem[offset : offset + size], "little")
+
+    @value.setter
+    def value(self, value):
+        mem, offset, size = self.mem, self.offset, self.size
+        value = (value % 256**size).to_bytes(size, "little")
+        mem[offset : offset + size] = value
+
+
 def get_subreg(reg, i):
     if i == "low":
         return reg.low
