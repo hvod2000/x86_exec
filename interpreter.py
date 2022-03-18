@@ -196,7 +196,7 @@ class Process:
             target.value -= source.value
 
     def show(self):
-        int2str = lambda n: str(int(n)).ljust(ceil_log(256**n.size, 10))
+        int2str = lambda n: str(int(n)).ljust(ceil_log(256**n.size, 10) + 1)
         variables = sorted(self.variables.items())
         print(" ".join(f"{n}={int2str(v)}" for n, v in variables))
 
