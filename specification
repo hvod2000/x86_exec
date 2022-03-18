@@ -10,4 +10,14 @@ db # one byte of data
 dw # two bytes of data
 
 operations:
-mov reg:part, reg:part
+# move value into something from something
+mov m, r
+mov r, r/m
+cbw # sign extension of a byte into two bytes
+cwd # sign extension of two bytes into four bytes
+# add two operands and put the result into the first one
+add r, r/m/imm
+add m, r/imm
+# substrat second operand from the first one
+sub r, r/m/imm
+sub m, r/imm
