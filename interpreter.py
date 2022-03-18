@@ -170,6 +170,20 @@ class Process:
         self.variables |= {"cl": cl, "cx": cx, "ch": ch}
         self.variables |= {"dl": dl, "dx": dx, "dh": dh}
 
+    @classmethod
+    def from_program(program):
+        code = program.code
+        mem_size = sum(w for v, w in program.variables.values())
+        mem = bytearray([0] * mem_size)
+        variables, offset = {}, 0
+        for name, (value, size) in program.variables.items():
+            variables[name] = Int(mem, offset, size)
+            variables[name].value = IntValue(value, size)
+            offset += size
+        process = Process(code, variables)
+        process.initialize_registers()
+        return process
+
 
 @dataclasses.dataclass
 class Programm:
