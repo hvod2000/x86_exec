@@ -50,6 +50,10 @@ class Int:
         value = (value % 256**size).to_bytes(size, "little")
         mem[offset : offset + size] = value
 
+    def __int__(self):
+        base = self.size * 8
+        return (self.value + 2 ** (base - 1)) % 2**base - 2 ** (base - 1)
+
 
 def get_subreg(reg, i):
     if i == "low":
