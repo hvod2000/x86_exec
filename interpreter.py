@@ -55,6 +55,10 @@ def set_subreg(reg, i, value):
 class State:
     registers: tuple[Register]
 
+    def move_reg(self, source, sd, target, td):
+        source, target = self.registers[source], self.registers[target]
+        set_subreg(target, td, get_subreg(source, td))
+
     def show(self):
         print("registers:")
         for i, name in enumerate("ABCD"):
