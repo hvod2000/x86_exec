@@ -70,17 +70,17 @@ class Int:
     @property
     def value(self):
         mem, offset, size = self.mem, self.offset, self.size
-        return int.from_bytes(mem[offset : offset + size], "little")
+        value = int.from_bytes(mem[offset : offset + size], "little")
+        return IntValue(value, size)
 
     @value.setter
     def value(self, value):
+        assert value.size == self.size
         mem, offset, size = self.mem, self.offset, self.size
-        value = (value % 256**size).to_bytes(size, "little")
-        mem[offset : offset + size] = value
+        mem[offset : offset + size] = (value.value).to_bytes(size, "little")
 
     def __int__(self):
-        base = self.size * 8
-        return (self.value + 2 ** (base - 1)) % 2**base - 2 ** (base - 1)
+        return int(self.value)
 
 
 def get_subreg(reg, i):
