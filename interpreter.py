@@ -1,5 +1,6 @@
 import dataclasses
 from mymath import ceil_log
+from string import ascii_lowercase
 
 
 @dataclasses.dataclass
@@ -128,6 +129,25 @@ class Instruction:
 
     def __str__(self):
         return f"{self.operation} {' '.join(self.args)}"
+
+    @classmethod
+    def parse(source):
+        source = source.split(";", 1)[0] if ";" in source else source
+        source = source.strip(" \t").lower()
+        if not source:
+            return None
+        instr = []
+        j = 0
+        while j < len(source):
+            i = j
+            while i < len(source) and source[i] in ascii_lowercase:
+                i += 1
+            instr.append(source[j:i])
+            while i < len(source) and source[i] not in ascii_lowercase:
+                i += 1
+            j = i
+        operation, args = instr[0], instr[1:]
+        return Instruction(operation, args)
 
 
 @dataclasses.dataclass
