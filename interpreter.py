@@ -33,6 +33,24 @@ class Register:
         return f"R({self.value})"
 
 
+def get_subreg(reg, i):
+    if i == "low":
+        return reg.low
+    elif i == "hig":
+        return reg.hieght
+    elif i == "v32":
+        return reg.value32
+
+
+def set_subreg(reg, i, value):
+    if i == "low":
+        reg.low = value
+    elif i == "hig":
+        reg.hieght = value
+    elif i == "v32":
+        reg.value32 = value
+
+
 @dataclass
 class State:
     registers: tuple[Register]
