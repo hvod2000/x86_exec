@@ -85,3 +85,16 @@ class State:
         print("registers:")
         for i, name in enumerate("ABCD"):
             print(f"\t{name} : {self.registers[i].value}")
+
+
+@dataclass
+class Instruction:
+    operation: str
+    args: list[str]
+
+
+@dataclass
+class Programm:
+    code: list[Instruction]
+    variables: dict[str, (int, int)]
+    labels: dict[str, int]
