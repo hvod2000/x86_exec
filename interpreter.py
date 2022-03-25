@@ -37,7 +37,7 @@ class IntValue:
         return IntValue(int(self), size)
 
     def split(self, *sizes):
-        assert sum(bits) == self.size
+        assert sum(sizes) == self.size
         offset = 0
         for size in sizes:
             yield IntValue(self.value >> 8 * offset, size)
@@ -66,7 +66,7 @@ class Int:
     size: int
 
     def split(self, *sizes):
-        assert sum(bits) == self.size
+        assert sum(sizes) == self.size
         offset = 0
         for size in sizes:
             yield Int(self.mem, self.offset + offset, size)
