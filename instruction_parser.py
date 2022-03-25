@@ -1,6 +1,7 @@
 from string import ascii_lowercase, digits
 
 WORD_CHARS = set(ascii_lowercase + digits)
+OPERATIONS = set("mov cbw cwd add sub".split())
 
 
 def parse_instruction(source):
