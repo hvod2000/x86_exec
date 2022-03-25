@@ -2,6 +2,16 @@ from itertools import product
 import pathlib
 
 
+def conditions_to_str(conditions, indent=0):
+    result = " " * (4 * indent) + "if " + " and ".join(conditions) + ":"
+    if len(result) <= 80:
+        return [result]
+    result = [" " * (4 * indent) + "if ("]
+    for i, cond in enumerate(conditions):
+        result.append(" " * (4 * (indent + 1)) + "and " * bool(i) + cond)
+    return result + [" " * (4 * indent) + "):"]
+
+
 def generate_case(pattern):
     if " " not in pattern:
         return [f'if operation == "{pattern}":', "    return not len(args)", ""]
@@ -24,7 +34,7 @@ def generate_case(pattern):
         for (i, p), (j, q) in zip(vargs, vargs[1:]):
             p, q = ["regs" if p == "r" else "vars" for p in [p, q]]
             condition.append(f"{p}[args[{i}]][1] == {q}[args[{j}]][1]")
-        code.append("    if " + " and ".join(condition) + ":")
+        code += conditions_to_str(condition, 1)
         varg = "regs" if vargs[0][1] == "r" else "vars"
         varg += f"[args[{vargs[0][0]}]]"
         code.append(" " * 8 + f"size = {varg}[1]")
