@@ -20,6 +20,13 @@ class Programm:
     def show(self):
         print("\n".join(map(str, self.code)))
 
+    def typecheck(self):
+        self.typecheck = lambda x: None
+        registers = {n: (None, v.size) for n, v in generate_registers().items()}
+        for i, instr in enumerate(self.code):
+            if not instr.typecheck(registers, self.variables):
+                raise ValueError(f"Failed to typecheck line #{i}: {instr}")
+
     @staticmethod
     def parse(source):
         lines = source.split("\n")
