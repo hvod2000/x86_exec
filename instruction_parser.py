@@ -20,7 +20,7 @@ def parse_instruction(source):
     if not tokens:
         return "", [], comment
     if tokens[0] in OPERATIONS:
-        if not all(comma == "," for comma in tokens[2::2]):
+        if not all(comma == "," for comma in tokens[2::2]) or tokens[-1] == ",":
             return None
         return tokens[0], tokens[1::2], comment
     if len(tokens) == 3 and tokens[1] in {"dw", "db"}:
