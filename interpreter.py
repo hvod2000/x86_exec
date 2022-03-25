@@ -1,9 +1,10 @@
 import dataclasses
+from typing import Any
 from mymath import ceil_log
 from memory import IntValue, Int
 from string import ascii_lowercase, digits
 from instructions import Instruction
-from collections import ChainMap
+from mycollections import ChainDict
 
 
 def generate_registers():
@@ -47,7 +48,7 @@ class Process:
     constants: dict[(str, int), Int]
     registers: dict[(str, int), Int]
     variables: dict[(str, int), Int]
-    namespace: ChainMap[str, Int]
+    namespace: Any  #  ChainDict[str, Int]
     next_instruction: int
 
     def step(self):
@@ -56,8 +57,8 @@ class Process:
 
     def show(self):
         int2str = lambda n: str(int(n)).ljust(ceil_log(256**n.size, 10) + 1)
-        variables = sorted(self.namespace.items())
-        print(" ".join(f"{n}:{s*8}={int2str(v)}" for (n, s), v in variables))
+        for ns in (self.registers.items(), self.variables.items()):
+            print(" ".join(f"{n}:{s*8}={int2str(v)}" for (n, s), v in ns))
 
     @staticmethod
     def start(program):
@@ -70,5 +71,5 @@ class Process:
         consts = {
             (str(c[0]), c[1]): Int.from_value(IntValue(*c)) for c in consts
         }
-        namespace = ChainMap({}, consts, registers, variables)
+        namespace = ChainDict(consts, registers, variables)
         return Process(program, consts, registers, variables, namespace, 0)
