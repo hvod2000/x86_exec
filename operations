@@ -1,8 +1,8 @@
 # All supported operations are listed below
 
 # move value into something from something
-mov m, r
-mov r, r/m
+mov r, r/m/imm
+mov m, r/imm
 
 # sign extension of a byte into two bytes
 cbw
