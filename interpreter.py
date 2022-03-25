@@ -95,8 +95,9 @@ class Instruction:
     comment: str = ""
 
     def __str__(self):
-        comment = "; " + self.comment if self.comment else ""
-        return f"{self.operation} {', '.join(self.args)}{comment}"
+        args = ",".join(" " + arg for arg in self.args)
+        comment = ";" + self.comment if self.comment else ""
+        return f"{self.operation}{args}{comment}"
 
 
 @dataclasses.dataclass
