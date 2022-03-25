@@ -25,7 +25,7 @@ class Instruction:
     def constants(self):
         yield from (int(arg) for arg in self.args if is_int(arg))
 
-    @classmethod
+    @staticmethod
     def parse(line):
         word_chars = set(ascii_lowercase + digits)
         line, comment = line.split(";", 1) if ";" in line else (line, "")
