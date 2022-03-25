@@ -65,6 +65,13 @@ class Int:
     offset: int
     size: int
 
+    def split(self, *sizes):
+        assert sum(bits) == self.size
+        offset = 0
+        for size in sizes:
+            yield Int(self.mem, self.offset + offset, size)
+            offset += size
+
     @property
     def value(self):
         mem, offset, size = self.mem, self.offset, self.size
