@@ -44,9 +44,9 @@ class Programm:
 @dataclasses.dataclass
 class Process:
     program: Programm
-    constants: dict[str, Int]
-    registers: dict[str, Int]
-    variables: dict[str, Int]
+    constants: dict[(str, int), Int]
+    registers: dict[(str, int), Int]
+    variables: dict[(str, int), Int]
     namespace: ChainMap[str, Int]
     next_instruction: int
 
@@ -57,11 +57,18 @@ class Process:
     def show(self):
         int2str = lambda n: str(int(n)).ljust(ceil_log(256**n.size, 10) + 1)
         variables = sorted(self.namespace.items())
-        print(" ".join(f"{n}={int2str(v)}" for n, v in variables))
+        print(" ".join(f"{n}:{s*8}={int2str(v)}" for (n, s), v in variables))
 
     @staticmethod
     def start(program):
+        program.typecheck()
         variables, registers = program.variables.items(), generate_registers()
         variables = {n: Int.from_value(IntValue(*v)) for (n, v) in variables}
-        namespace = ChainMap({}, registers, variables)
-        return Process(program, {}, registers, variables, namespace, 0)
+        variables = {(n, v.size): v for (n, v) in variables.items()}
+        registers = {(n, v.size): v for (n, v) in registers.items()}
+        consts = {const for line in program.code for const in line.constants}
+        consts = {
+            (str(c[0]), c[1]): Int.from_value(IntValue(*c)) for c in consts
+        }
+        namespace = ChainMap({}, consts, registers, variables)
+        return Process(program, consts, registers, variables, namespace, 0)
