@@ -64,12 +64,10 @@ class Process:
     def start(program):
         program.typecheck()
         variables, registers = program.variables.items(), generate_registers()
-        variables = {n: Int.from_value(IntValue(*v)) for (n, v) in variables}
+        variables = {n: Int(*v) for (n, v) in variables}
         variables = {(n, v.size): v for (n, v) in variables.items()}
         registers = {(n, v.size): v for (n, v) in registers.items()}
         consts = {const for line in program.code for const in line.constants}
-        consts = {
-            (str(c[0]), c[1]): Int.from_value(IntValue(*c)) for c in consts
-        }
+        consts = {(str(c[0]), c[1]): Int(*c) for c in consts}
         namespace = ChainDict(consts, registers, variables)
         return Process(program, consts, registers, variables, namespace, 0)
