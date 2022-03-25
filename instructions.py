@@ -68,6 +68,23 @@ class Instruction:
                     return True
                 return x in vars and (y in regs or is_int(y))
 
+    def execute(self, vars):
+        op, args, get_var = self.operation, self.args, dict2fun(vars)
+        match op:
+            case "mov":
+                target, source = map(get_var, args)
+                target.value = source.value
+            case "cbw":
+                vars["ax"].value = vars["al"].value.sext(2)
+            case "cwd":
+                vars["dx"] = vars["ax"].value.sext(4).split(2, 2)[1]
+            case "add":
+                target, source = map(get_var, args)
+                target.value += source.value
+            case "sub":
+                target, source = map(get_var, args)
+                target.value -= source.value
+
     def __str__(self):
         args = ",".join(" " + arg for arg in self.args)
         comment = ";" + self.comment if self.comment else ""
