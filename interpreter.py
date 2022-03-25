@@ -37,6 +37,7 @@ class IntValue:
         return IntValue(int(self), size)
 
     def split(self, low, hight):
+        assert low + hight == self.size
         low = IntValue(self.value, low)
         hight = IntValue(self.value >> (self.size - hight), hight)
         return low, hight
