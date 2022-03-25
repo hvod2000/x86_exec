@@ -52,6 +52,12 @@ class Int:
             yield Int(self.mem, self.offset + offset, size)
             offset += size
 
+    @staticmethod
+    def from_value(value):
+        self = Int(bytearray(value.size), 0, value.size)
+        self.value = value
+        return self
+
     @property
     def value(self):
         mem, offset, size = self.mem, self.offset, self.size
