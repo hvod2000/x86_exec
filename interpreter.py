@@ -25,38 +25,6 @@ def parse_tokens(line):
 
 
 @dataclasses.dataclass
-class Register:
-    value: int
-
-    @property
-    def low(self):
-        return self.value % 256
-
-    @property
-    def hieght(self):
-        return (self.value // 256) % 256
-
-    @property
-    def value32(self):
-        return self.value % 2**32
-
-    @low.setter
-    def low(self, value):
-        self.value += (value % 256) - self.low
-
-    @hieght.setter
-    def hieght(self, value):
-        self.value += (value % 256 - self.hieght) * 256
-
-    @value32.setter
-    def value32(self, value):
-        self.value += value % 2**32 - self.value32
-
-    def __str__(self):
-        return f"R({self.value})"
-
-
-@dataclasses.dataclass
 class IntValue:
     value: int
     size: int
@@ -111,38 +79,6 @@ class Int:
         return int(self.value)
 
 
-def get_subreg(reg, i):
-    if i == "low":
-        return reg.low
-    elif i == "hig":
-        return reg.hieght
-    elif i == "v32":
-        return reg.value32
-
-
-def set_subreg(reg, i, value):
-    if i == "low":
-        reg.low = value
-    elif i == "hig":
-        reg.hieght = value
-    elif i == "v32":
-        reg.value32 = value
-
-
-@dataclasses.dataclass
-class State:
-    registers: tuple[Register]
-
-    def move_reg(self, source, sd, target, td):
-        source, target = self.registers[source], self.registers[target]
-        set_subreg(target, td, get_subreg(source, td))
-
-    def show(self):
-        print("registers:")
-        for i, name in enumerate("ABCD"):
-            print(f"\t{name} : {self.registers[i].value}")
-
-
 @dataclasses.dataclass
 class Instruction:
     operation: str
@@ -150,25 +86,6 @@ class Instruction:
 
     def __str__(self):
         return f"{self.operation} {', '.join(self.args)}"
-
-    @staticmethod
-    def parse(source):
-        source = source.split(";", 1)[0] if ";" in source else source
-        source = source.strip(" \t").lower()
-        if not source:
-            return None
-        instr = []
-        j = 0
-        while j < len(source):
-            i = j
-            while i < len(source) and source[i] in ascii_lowercase + ",":
-                i += 1
-            instr.append(source[j:i])
-            while i < len(source) and source[i] not in ascii_lowercase:
-                i += 1
-            j = i
-        operation, args = instr[0], [a.strip(",") for a in instr[1:]]
-        return Instruction(operation, args)
 
 
 @dataclasses.dataclass
