@@ -1,0 +1,19 @@
+# All supported operations are listed below
+
+# move value into something from something
+mov m, r
+mov r, r/m
+
+# sign extension of a byte into two bytes
+cbw
+
+# sign extension of two bytes into four bytes
+cwd
+
+# add two operands and put the result into the first one
+add r, r/m/imm
+add m, r/imm
+
+# substrat second operand from the first one
+sub r, r/m/imm
+sub m, r/imm
