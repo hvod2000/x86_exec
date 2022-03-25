@@ -2,6 +2,7 @@ import dataclasses
 from mymath import ceil_log
 from string import ascii_lowercase, digits
 from instructions import Instruction
+from collections import ChainMap
 
 
 @dataclasses.dataclass
@@ -74,46 +75,16 @@ class Int:
         return int(self.value)
 
 
-@dataclasses.dataclass
-class Process:
-    code: list[Instruction]
-    variables: dict[str, Int] = dataclasses.field(default_factory=dict)
-    instruction_ptr: int = 0
-
-    def step(self):
-        self.code[self.instruction_ptr].execute(self.variables)
-        self.instruction_ptr += 1
-
-    def show(self):
-        int2str = lambda n: str(int(n)).ljust(ceil_log(256**n.size, 10) + 1)
-        variables = sorted(self.variables.items())
-        print(" ".join(f"{n}={int2str(v)}" for n, v in variables))
-
-    def initialize_registers(self):
-        regs = [(n, Int(bytearray(2), 0, 2)) for n, s in zip("abcd", range(4))]
-        subs = {n + e: s for n, r in regs for e, s in zip("lh", r.split(1, 1))}
-        self.variables |= {n + "x": r for n, r in regs} | subs
-
-    @staticmethod
-    def from_program(program):
-        code = program.code
-        mem_size = sum(w for v, w in program.variables.values())
-        mem = bytearray([0] * mem_size)
-        variables, offset = {}, 0
-        for name, (value, size) in program.variables.items():
-            variables[name] = Int(mem, offset, size)
-            variables[name].value = IntValue(value, size)
-            offset += size
-        process = Process(code, variables)
-        process.initialize_registers()
-        return process
+def generate_registers():
+    regs = [(n, Int(bytearray(2), 0, 2)) for n, s in zip("abcd", range(4))]
+    subs = {n + e: s for n, r in regs for e, s in zip("lh", r.split(1, 1))}
+    return {n + "x": r for n, r in regs} | subs
 
 
 @dataclasses.dataclass
 class Programm:
     code: list[Instruction]
     variables: dict[str, (int, int)]
-    labels: dict[str, int]
 
     def show(self):
         print("\n".join(map(str, self.code)))
@@ -121,7 +92,7 @@ class Programm:
     @staticmethod
     def parse(source):
         lines = source.split("\n")
-        code, variables, labels = [], {}, {}
+        code, variables = [], {}
         for line in lines:
             if not (instruction := Instruction.parse(line)):
                 raise Exception(f"unknown instruction: {line}")
@@ -129,4 +100,30 @@ class Programm:
                 name, size, value = instruction.args
                 variables[name] = (int(value), 2 if size == "dw" else 1)
             code.append(instruction)
-        return Programm(code, variables, labels)
+        return Programm(code, variables)
+
+
+@dataclasses.dataclass
+class Process:
+    program: Programm
+    constants: dict[str, Int]
+    registers: dict[str, Int]
+    variables: dict[str, Int]
+    namespace: ChainMap[str, Int]
+    next_instruction: int
+
+    def step(self):
+        self.program.code[self.next_instruction].execute(self.namespace)
+        self.next_instruction += 1
+
+    def show(self):
+        int2str = lambda n: str(int(n)).ljust(ceil_log(256**n.size, 10) + 1)
+        variables = sorted(self.namespace.items())
+        print(" ".join(f"{n}={int2str(v)}" for n, v in variables))
+
+    @staticmethod
+    def start(program):
+        variables, registers = program.variables.items(), generate_registers()
+        variables = {n: Int.from_value(IntValue(*v)) for (n, v) in variables}
+        namespace = ChainMap({}, registers, variables)
+        return Process(program, {}, registers, variables, namespace, 0)
