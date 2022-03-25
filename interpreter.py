@@ -36,11 +36,12 @@ class IntValue:
     def sext(self, size):
         return IntValue(int(self), size)
 
-    def split(self, low, hight):
-        assert low + hight == self.size
-        low = IntValue(self.value, low)
-        hight = IntValue(self.value >> (self.size - hight), hight)
-        return low, hight
+    def split(self, *bits):
+        assert sum(bits) == self.size
+        offset = 0
+        for bits in bits:
+            yield IntValue(self.value >> 8 * offset, bits)
+            offset += bits
 
     def __int__(self):
         t = 2 ** (self.size * 8 - 1)
