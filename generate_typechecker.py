@@ -1,0 +1,46 @@
+from itertools import product
+import pathlib
+
+
+def generate_case(pattern):
+    if " " not in pattern:
+        return [f'if operation == "{pattern}":', "    return not len(args)", ""]
+    op, args = pattern.split(" ", 1)
+    args = list(list(arg.split("/")) for arg in args.split(", "))
+    code = [f'if operator == "{op}" and len(args) == {len(args)}:']
+    for args in product(*args):
+        condition = []
+        for i, arg in enumerate(args):
+            match arg:
+                case "r":
+                    condition.append(f"args[{i}] in regs")
+                case "m":
+                    condition.append(f"args[{i}] in vars")
+                case "imm":
+                    condition.append(f"is_int(args[{i}])")
+        vargs = [(i, arg) for i, arg in enumerate(args) if arg in "rm"]
+        if not vargs:
+            raise ValueError("Unknown size of a constant operand")
+        for (i, p), (j, q) in zip(vargs, vargs[1:]):
+            p, q = ["regs" if p == "r" else "vars" for p in [p, q]]
+            condition.append(f"{p}[args[{i}]][1] == {q}[args[{j}]][1]")
+        code.append("    if " + " and ".join(condition) + ":")
+        varg = "regs" if vargs[0][1] == "r" else "vars"
+        varg += f"[args[{vargs[0][0]}]]"
+        code.append(" " * 8 + f"size = {varg}[1]")
+        for i, arg in enumerate(args):
+            code.append(" " * 8 + f"args[{i}] = (args[{i}], size)")
+        code.append(" " * 8 + "return True")
+        code.append("")
+    return code
+
+
+ops = pathlib.Path("operations").read_text().split("\n")
+ops = [op for op in (op.split("#")[0].strip() for op in ops) if op]
+code = ['is_int = lambda num: num.removeprefix("-").isdigit()', "", ""]
+code.append("def typecheck(instruction, vars, regs):")
+code.append("    operation, args = instruction.operator, instruction.args")
+indent = lambda line: (" " * 4 + line) if line else line
+code += [indent(line) for op in ops for line in generate_case(op)]
+code.append("    return False")
+pathlib.Path("instruction_typechecking.py").write_text("\n".join(code))
