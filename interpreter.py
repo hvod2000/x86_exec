@@ -92,9 +92,11 @@ class Int:
 class Instruction:
     operation: str
     args: list[str]
+    comment: str = ""
 
     def __str__(self):
-        return f"{self.operation} {', '.join(self.args)}"
+        comment = "; " + self.comment if self.comment else ""
+        return f"{self.operation} {', '.join(self.args)}{comment}"
 
 
 @dataclasses.dataclass
