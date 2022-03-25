@@ -17,7 +17,7 @@ def generate_case(pattern):
         return [f'if operation == "{pattern}":', "    return not len(args)", ""]
     op, args = pattern.split(" ", 1)
     args = list(list(arg.split("/")) for arg in args.split(", "))
-    code = [f'if operator == "{op}" and len(args) == {len(args)}:']
+    code = [f'if operation == "{op}" and len(args) == {len(args)}:']
     for args in product(*args):
         condition = []
         for i, arg in enumerate(args):
@@ -49,8 +49,8 @@ ops = pathlib.Path("operations").read_text().split("\n")
 ops = [op for op in (op.split("#")[0].strip() for op in ops) if op]
 code = ['is_int = lambda num: num.removeprefix("-").isdigit()', "", ""]
 code.append("def typecheck(instruction, vars, regs):")
-code.append("    operation, args = instruction.operator, instruction.args")
+code.append("    operation, args = instruction.operation, instruction.args")
 indent = lambda line: (" " * 4 + line) if line else line
 code += [indent(line) for op in ops for line in generate_case(op)]
 code.append("    return False")
-pathlib.Path("instruction_typechecking.py").write_text("\n".join(code))
+pathlib.Path("instruction_typechecking.py").write_text("\n".join(code) + "\n")

@@ -2,8 +2,8 @@ is_int = lambda num: num.removeprefix("-").isdigit()
 
 
 def typecheck(instruction, vars, regs):
-    operation, args = instruction.operator, instruction.args
-    if operator == "mov" and len(args) == 2:
+    operation, args = instruction.operation, instruction.args
+    if operation == "mov" and len(args) == 2:
         if (
             args[0] in vars
             and args[1] in regs
@@ -14,7 +14,7 @@ def typecheck(instruction, vars, regs):
             args[1] = (args[1], size)
             return True
 
-    if operator == "mov" and len(args) == 2:
+    if operation == "mov" and len(args) == 2:
         if (
             args[0] in regs
             and args[1] in regs
@@ -41,7 +41,7 @@ def typecheck(instruction, vars, regs):
     if operation == "cwd":
         return not len(args)
 
-    if operator == "add" and len(args) == 2:
+    if operation == "add" and len(args) == 2:
         if (
             args[0] in regs
             and args[1] in regs
@@ -68,7 +68,7 @@ def typecheck(instruction, vars, regs):
             args[1] = (args[1], size)
             return True
 
-    if operator == "add" and len(args) == 2:
+    if operation == "add" and len(args) == 2:
         if (
             args[0] in vars
             and args[1] in regs
@@ -85,7 +85,7 @@ def typecheck(instruction, vars, regs):
             args[1] = (args[1], size)
             return True
 
-    if operator == "sub" and len(args) == 2:
+    if operation == "sub" and len(args) == 2:
         if (
             args[0] in regs
             and args[1] in regs
@@ -112,7 +112,7 @@ def typecheck(instruction, vars, regs):
             args[1] = (args[1], size)
             return True
 
-    if operator == "sub" and len(args) == 2:
+    if operation == "sub" and len(args) == 2:
         if (
             args[0] in vars
             and args[1] in regs
