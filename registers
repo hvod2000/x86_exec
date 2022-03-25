@@ -1,0 +1,13 @@
+# All supported registers are listed below
+
+# registers that occupy one byte of memory
+al, ah
+bl, bh
+cl, ch
+dl, dh
+
+# registers that occupy two bytes of memory
+ax # = [al, ah]
+bx # = [bl, bh]
+cx # = [cl, ch]
+dx # = [dl, dh]

@@ -1,0 +1,7 @@
+# All supported variable declarations are listed below
+
+# one byte of data
+variable_name db initial_value
+
+# two bytes of data
+variable_name dw initial_value
