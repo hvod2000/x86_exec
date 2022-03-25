@@ -75,22 +75,8 @@ class Process:
     instruction_ptr: int = 0
 
     def step(self):
-        instr = self.code[self.instruction_ptr]
+        self.code[self.instruction_ptr].execute(self.variables)
         self.instruction_ptr += 1
-        if instr.operation == "mov":
-            target, source = map(lambda name: self.variables[name], instr.args)
-            target.value = source.value
-        elif instr.operation == "cbw":
-            self.variables["ax"].value = self.variables["al"].value.sext(2)
-        elif instr.operation == "cwd":
-            low, hieght = self.variables["ax"].value.sext(4).split(2, 2)
-            self.variables["dx"] = hieght
-        elif instr.operation == "add":
-            target, source = map(lambda name: self.variables[name], instr.args)
-            target.value += source.value
-        elif instr.operation == "sub":
-            target, source = map(lambda name: self.variables[name], instr.args)
-            target.value -= source.value
 
     def show(self):
         int2str = lambda n: str(int(n)).ljust(ceil_log(256**n.size, 10) + 1)
