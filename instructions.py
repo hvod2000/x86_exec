@@ -43,6 +43,28 @@ class Instruction:
             return Instruction("define", tokens, comment)
         return None
 
+    def typecheck(self, regs, vars):
+        op, args = self.operation, self.args
+        if op not in OPERATIONS:
+            return op == "" and not args or op == "define"
+        match op:
+            case "mov":
+                if len(tokens) != 2:
+                    return False
+                x, y = tokens
+                if x in vars and y in regs:
+                    return True
+                return x in vars and y in (regs | vars)
+            case "cbw", "cwd":
+                return not len(tokens)
+            case "add", "sub":
+                if len(tokens) != 2:
+                    return False
+                x, y = tokens
+                if x in regs and (y in (regs | vars) or is_int(y)):
+                    return True
+                return x in vars and (y in regs or is_int(y))
+
     def __str__(self):
         args = ",".join(" " + arg for arg in self.args)
         comment = ";" + self.comment if self.comment else ""
