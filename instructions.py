@@ -13,7 +13,7 @@ dict2fun = lambda dct: lambda name: dct[name]
 @dataclasses.dataclass
 class Instruction:
     operation: str
-    args: Any #list[str | (str, int)]
+    args: Any  # list[str | (str, int)]
     comment: str = ""
 
     def typecheck(self, regs, vars):
@@ -26,6 +26,8 @@ class Instruction:
 
     @property
     def constants(self):
+        if self.operation in ("define", ""):
+            return
         yield from ((int(arg), size) for arg, size in self.args if is_int(arg))
 
     @staticmethod
