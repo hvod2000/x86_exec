@@ -3,10 +3,8 @@ from mymath import ceil_log
 from string import ascii_lowercase, digits
 
 
-word_chars = ascii_lowercase + digits
-
-
 def parse_tokens(line):
+    word_chars = set(ascii_lowercase + digits)
     source, comment = line.split(";", 1) if ";" in line else (line, None)
     source = source.strip().lower()
     tokens, in_word = [], False
