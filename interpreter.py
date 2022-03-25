@@ -110,11 +110,7 @@ class Programm:
     labels: dict[str, int]
 
     def show(self):
-        labels = {i: label for label, i in self.labels.items()}
-        for line_number, line in enumerate(self.code):
-            if line_number in labels:
-                print(labels[line_number] + ":")
-            print("\t" + str(line))
+        print("\n".join(map(str, self.code)))
 
     @staticmethod
     def parse(source):
