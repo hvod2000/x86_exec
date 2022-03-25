@@ -42,6 +42,19 @@ class Int:
     offset: int
     size: int
 
+    def __init__(self, *args):
+        if len(args) == 3:
+            self.mem, self.offset, self.size = args
+        elif len(args) == 2:
+            value, size = args
+            self.mem, self.offset, self.size = bytearray(size), 0, size
+            self.value = IntValue(value, size)
+        else:
+            value = args[0]
+            size = value.size
+            self.mem, self.offset, self.size = bytearray(size), 0, size
+            self.value = value
+
     def split(self, *sizes):
         assert sum(sizes) == self.size
         offset = 0
