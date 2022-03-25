@@ -154,18 +154,10 @@ class Programm:
         lines = source.split("\n")
         code, variables, labels = [], {}, {}
         for line in lines:
-            tokens, comment = parse_tokens(line)
-            if not tokens:
-                code.append(Instruction("", [], comment))
-                continue
-            elif tokens[0] in {"mov", "cbw", "cwd", "add", "sub"}:
-                code.append(Instruction(tokens[0], tokens[1::2], comment))
-            elif tokens[1] in {"dw", "db"}:
-                code.append(Instruction("undefined_behavour", [], comment))
-                name, value = tokens[0], tokens[2]
-                assert name not in variables
-                size = 2 if tokens[1] == "dw" else 1
-                variables[name] = (int(value), size)
-            else:
+            if not (instruction := Instruction.parse(line)):
                 raise Exception(f"unknown instruction: {line}")
+            if instruction.operation == "define":
+                name, size, value = instruction.args
+                variables[name] = (int(value), 2 if size == "dw" else 1)
+            code.append(instruction)
         return Programm(code, variables, labels)
