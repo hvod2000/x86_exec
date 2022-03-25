@@ -12,6 +12,9 @@ def is_int(number):
     return True
 
 
+dict2fun = lambda dct: lambda name: dct[name]
+
+
 @dataclasses.dataclass
 class Instruction:
     operation: str
