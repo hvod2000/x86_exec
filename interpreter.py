@@ -4,25 +4,6 @@ from string import ascii_lowercase, digits
 from instructions import Instruction
 
 
-def parse_tokens(line):
-    word_chars = set(ascii_lowercase + digits)
-    source, comment = line.split(";", 1) if ";" in line else (line, None)
-    source = source.strip().lower()
-    tokens, in_word = [], False
-    for char in source:
-        if char in word_chars:
-            if in_word:
-                tokens[-1] += char
-            else:
-                tokens.append(char)
-            in_word = True
-        else:
-            if char not in " \t":
-                tokens.append(char)
-            in_word = False
-    return tokens, comment
-
-
 @dataclasses.dataclass
 class IntValue:
     value: int
