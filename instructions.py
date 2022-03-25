@@ -1,6 +1,14 @@
 import dataclasses
 
 
+def is_int(number):
+    try:
+        int(number)
+    except ValueError:
+        return False
+    return True
+
+
 @dataclasses.dataclass
 class Instruction:
     operation: str
