@@ -21,6 +21,10 @@ class Instruction:
     args: list[str]
     comment: str = ""
 
+    @property
+    def constants(self):
+        yield from (int(arg) for arg in self.args if is_int(arg))
+
     @classmethod
     def parse(line):
         word_chars = set(ascii_lowercase + digits)
