@@ -46,4 +46,6 @@ class Instruction:
     def __str__(self):
         args = ",".join(" " + arg for arg in self.args)
         comment = ";" + self.comment if self.comment else ""
+        if self.operation == "define":
+            return " ".join(self.args) + comment
         return f"{self.operation}{args}{comment}"
