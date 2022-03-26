@@ -21,6 +21,10 @@ class Definition(Statement):
 class DefinitionByte(Definition):
     value: int
 
+    @property
+    def size(self):
+        return 1
+
     def __str__(self):
         return self.add_comment(f"{self.variable} db {self.value}")
 
@@ -28,6 +32,10 @@ class DefinitionByte(Definition):
 @dataclass
 class DefinitionWord(Definition):
     value: int
+
+    @property
+    def size(self):
+        return 2
 
     def __str__(self):
         return self.add_comment(f"{self.variable} dw {self.value}")
