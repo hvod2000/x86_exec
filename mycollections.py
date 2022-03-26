@@ -32,7 +32,10 @@ class FunDict:
         self.f = f
 
     def __getitem__(self, i):
-        return self.f[i]
+        return self.f(i)
+
+    def __contains__(self, i):
+        return True
 
     def items(self):
         pass
