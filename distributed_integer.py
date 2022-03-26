@@ -53,6 +53,13 @@ class Int:
     def __str__(self):
         return f"{self.i}:{self.size * 8}"
 
+    def __add__(self, other):
+        return self.i + other.i
+
+    def __iadd__(self, other):
+         self @= self + other
+         return self
+
     @property
     def i(self):
         return bytes2int(self.location)
