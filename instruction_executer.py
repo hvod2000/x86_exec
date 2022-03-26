@@ -33,6 +33,11 @@ def execute(instruction, namespace):
             q, r = divmod(a[size * 2].u, operand.u)
             a[size] @= q
             d[size] @= r
+        case "idiv":
+            operand, size = get_sized(args[0])
+            q, r = divmod(a[size * 2].i, operand.i)
+            a[size] @= q
+            d[size] @= r
         case "define" | "":
             pass
         case _:
