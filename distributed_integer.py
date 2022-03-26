@@ -60,6 +60,13 @@ class Int:
          self @= self + other
          return self
 
+    def __sub__(self, other):
+        return self.i - other.i
+
+    def __isub__(self, other):
+         self @= self - other
+         return self
+
     @property
     def i(self):
         return bytes2int(self.location)
