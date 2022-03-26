@@ -2,9 +2,11 @@ import dataclasses
 from typing import Any
 from mymath import ceil_log
 from distributed_integer import Int
-from string import ascii_lowercase, digits
-from instructions import Instruction
-from mycollections import ChainDict
+from mycollections import ChainDict, FunDict
+import typed_instructions
+import typechecker
+import executer
+import parser
 
 
 def generate_registers():
@@ -15,7 +17,7 @@ def generate_registers():
 
 @dataclasses.dataclass
 class Programm:
-    code: list[Instruction]
+    code: list[typed_instructions.Statement]
     variables: dict[str, (int, int)]
 
     def show(self):
@@ -24,35 +26,37 @@ class Programm:
     def typecheck(self):
         self.typecheck = lambda x: None
         registers = {n: (None, v.size) for n, v in generate_registers().items()}
-        for i, instr in enumerate(self.code):
-            if not instr.typecheck(registers, self.variables):
-                raise ValueError(f"Failed to typecheck line #{i}: {instr}")
+        for i, stmt in enumerate(self.code):
+            if isinstance(stmt, typed_instructions.Operator):
+                if not typechecker.typecheck(stmt, registers, self.variables):
+                    raise ValueError(f"Failed to typecheck line #{i}: {instr}")
 
     @staticmethod
     def parse(source):
         lines = source.split("\n")
         code, variables = [], {}
         for line in lines:
-            if not (instruction := Instruction.parse(line)):
+            if not (statement := parser.parse_statement(line)):
                 raise Exception(f"unknown instruction: {line}")
-            if instruction.operation == "define":
-                name, size, value = instruction.args
-                variables[name] = (int(value), 2 if size == "dw" else 1)
-            code.append(instruction)
+            if isinstance(statement, typed_instructions.Definition):
+                name = statement.variable
+                variables[name] = (statement.value, statement.size)
+            code.append(statement)
         return Programm(code, variables)
 
 
 @dataclasses.dataclass
 class Process:
     program: Programm
-    constants: dict[(str, int), Int]
     registers: dict[(str, int), Int]
     variables: dict[(str, int), Int]
     namespace: Any  #  ChainDict[str, Int]
     next_instruction: int
 
     def step(self):
-        self.program.code[self.next_instruction].execute(self.namespace)
+        stmt = self.program.code[self.next_instruction]
+        if isinstance(stmt, typed_instructions.Operator):
+            executer.execute(stmt, self.namespace)
         self.next_instruction += 1
 
     def show(self):
@@ -63,11 +67,10 @@ class Process:
     @staticmethod
     def start(program):
         program.typecheck()
+        constants = FunDict(lambda v: Int(int(v[0]), v[1]))
         variables, registers = program.variables.items(), generate_registers()
         variables = {n: Int(*v) for (n, v) in variables}
         variables = {(n, v.size): v for (n, v) in variables.items()}
         registers = {(n, v.size): v for (n, v) in registers.items()}
-        consts = {const for line in program.code for const in line.constants}
-        consts = {(str(c[0]), c[1]): Int(*c) for c in consts}
-        namespace = ChainDict(consts, registers, variables)
-        return Process(program, consts, registers, variables, namespace, 0)
+        namespace = ChainDict(registers, variables, constants)
+        return Process(program, registers, variables, namespace, 0)
