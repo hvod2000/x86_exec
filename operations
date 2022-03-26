@@ -23,3 +23,6 @@ mul r/m
 
 # signed multiply al or ax by operand
 imul r/m
+
+# unsigned divide ax or (ax, dx) by operand
+div r/m

@@ -163,4 +163,15 @@ def typecheck(instruction, vars, regs):
             args[0] = (args[0], size)
             return True
 
+    if operation == "div" and len(args) == 1:
+        if args[0] in regs:
+            size = regs[args[0]][1]
+            args[0] = (args[0], size)
+            return True
+
+        if args[0] in vars:
+            size = vars[args[0]][1]
+            args[0] = (args[0], size)
+            return True
+
     return False
