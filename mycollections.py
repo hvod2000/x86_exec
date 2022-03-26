@@ -25,3 +25,14 @@ class ChainDict:
                     continue
                 visited.add(k)
                 yield k, v
+
+
+class FunDict:
+    def __init__(self, f):
+        self.f = f
+
+    def __getitem__(self, i):
+        return self.f[i]
+
+    def items(self):
+        pass
