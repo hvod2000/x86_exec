@@ -35,6 +35,9 @@ class IntValue:
         assert u.size == v.size
         return IntValue(u.value - v.value, u.size)
 
+    def __mul__(u, v):
+        return IntValue(int(u) * int(v), u.size + v.size)
+
     def mul(u, v):
         return IntValue(u.value * v.value, u.size + v.size)
 

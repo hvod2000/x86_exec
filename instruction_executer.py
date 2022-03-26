@@ -24,3 +24,9 @@ def execute(instruction, vars):
                 ax.value, dx.value = (ax.value.mul(operand.value)).split(2, 2)
             else:
                 ax.value = (al.value.mul(operand.value))
+        case "imul":
+            operand = get_var(args[0])
+            if operand.size == 2:
+                ax.value, dx.value = (ax.value * operand.value).split(2, 2)
+            else:
+                ax.value = al.value * operand.value
