@@ -1,0 +1,53 @@
+#!/bin/python3.10
+
+from tokenizer import tokenize
+from itertools import product
+import specification
+import pathlib
+
+
+def pascal_case(name):
+    return name[0].upper() + name[1:].lower()
+
+
+def generate_case(operator, argument_variants):
+    operator_type = "Operator" + pascal_case(operator)
+    operands_count = len(next(iter(argument_variants)))
+    operands = [f"operand{i + 1}" for i in range(operands_count)]
+    if operands_count == 1:
+        operands = ["operand"]
+    ops = [", " + op for op in operands]
+    code = f'"{operator}"' + ', ","'.join(ops)
+    code = [" " * 8 + f"case [{code}]:"]
+    code.append(" " * 12 + f"return {operator_type}(comment{''.join(ops)})")
+    return code
+
+
+def generate_parser(operators_specification):
+    yield " " * 0 + "def parse_statement(source):"
+    yield " " * 4 + "tokens, comment = tokenize(source)"
+    yield " " * 4 + "match tokens:"
+    yield " " * 8 + "case []:"
+    yield " " * 12 + "return Statement(comment)"
+    for operator, operand_options in operators_specification.items():
+        yield from generate_case(operator, operand_options)
+    code = """        case [variable, "db", value] if is_int(value):
+            return DefinitionByte(comment, variable, int(value))
+        case [variable, "dw", value] if is_int(value):
+            return DefinitionWord(comment, variable, int(value))
+        case _:
+            return None"""
+    yield from code.split("\n")
+
+
+if __name__ == "__main__":
+    code = []
+    code.append("from tokenizer import tokenize")
+    code.append("from typed_instructions import *")
+    code.append("")
+    code.append('is_int = lambda num: num.removeprefix("-").isdigit()')
+    code.append("")
+    code.append("")
+    code += generate_parser(specification.operators)
+    code = "".join(f"{line}\n" for line in code)
+    pathlib.Path("parser.py").write_text(code)
