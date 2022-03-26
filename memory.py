@@ -35,6 +35,9 @@ class IntValue:
         assert u.size == v.size
         return IntValue(u.value - v.value, u.size)
 
+    def mul(u, v):
+        return IntValue(u.value * v.value, u.size + v.size)
+
 
 @dataclasses.dataclass
 class Int:
