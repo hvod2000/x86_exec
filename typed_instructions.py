@@ -47,7 +47,7 @@ class Operator(Statement):
 
 
 @dataclass
-class OperatorMove(Operator):
+class OperatorMov(Operator):
     operand1: str
     operand2: str
     size: int | None = None

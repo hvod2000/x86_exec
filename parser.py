@@ -10,7 +10,7 @@ def parse_statement(source):
         case []:
             return Statement(comment)
         case ["mov", operand1, ",", operand2]:
-            return OperatorMove(comment, operand1, operand2)
+            return OperatorMov(comment, operand1, operand2)
         case ["cbw"]:
             return OperatorCbw(comment)
         case ["cwd"]:
