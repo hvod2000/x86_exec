@@ -17,3 +17,6 @@ add m, r/imm
 # substrat second operand from the first one
 sub r, r/m/imm
 sub m, r/imm
+
+# multiply al or ax by operand
+mul r/m
