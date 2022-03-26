@@ -1,14 +1,14 @@
 import dataclasses
 from typing import Any
 from mymath import ceil_log
-from memory import IntValue, Int
+from distributed_integer import Int
 from string import ascii_lowercase, digits
 from instructions import Instruction
 from mycollections import ChainDict
 
 
 def generate_registers():
-    regs = [(n, Int(bytearray(2), 0, 2)) for n, s in zip("abcd", range(4))]
+    regs = [(n, Int(-42, 2)) for n, s in zip("abcd", range(4))]
     subs = {n + e: s for n, r in regs for e, s in zip("lh", r.split(1, 1))}
     return {n + "x": r for n, r in regs} | subs
 
@@ -56,7 +56,7 @@ class Process:
         self.next_instruction += 1
 
     def show(self):
-        int2str = lambda n: str(int(n)).ljust(ceil_log(256**n.size, 10) + 1)
+        int2str = lambda n: str(n.i).ljust(ceil_log(256**n.size, 10) + 1)
         for ns in (self.registers.items(), self.variables.items()):
             print(" ".join(f"{n}:{s*8}={int2str(v)}" for (n, s), v in ns))
 
