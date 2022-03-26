@@ -8,6 +8,19 @@ dict2fun = lambda dct: lambda name: dct.get(name, name)
 ARGUMENT_TYPES = {"r": "registers", "m": "memory", "imm": "immediate"}
 
 
+def conditions_to_str(conditions, current_indent=0, indent=0):
+    result = "if " + " and ".join(conditions) + ":"
+    if current_indent + len(result) <= 80:
+        return [result]
+    result = " " * (indent + 4) + " and ".join(conditions)
+    if len(result) <= 80:
+        return ["if (", result, " " * indent + "):"]
+    result = ["if ("]
+    for i, cond in enumerate(conditions):
+        result.append(" " * (indent + 4) + "and " * bool(i) + cond)
+    return result + [" " * indent + "):"]
+
+
 def parse_operators_specification(specification):
     lines = (line.split("#")[0].strip() for line in specification.split("\n"))
     source = [tokenize(line)[0] for line in lines if line]
@@ -59,7 +72,9 @@ def generate_case(operator, argument_variants):
         for i, j in zip(variables, variables[1:]):
             p, q = operand_types[i], operand_types[j]
             conditions.append(f"{p}[operand{i}][1] == {q}[operand{j}][1]")
-        code[-1] += " if " + " and ".join(conditions) + ":"
+        conditions = conditions_to_str(conditions, len(code[-1]) + 1, 8)
+        code[-1] += " " + conditions[0]
+        code += conditions[1:]
         var = f"{operand_types[variables[0]]}[operand{variables[0]}]"
         code.append(" " * 12 + f"instr.size = {var}[1]")
         code.append(" " * 12 + f"return True")
@@ -77,8 +92,13 @@ def generate_typechecker(operators_specification):
     yield " " * 12 + "return False"
 
 
+code = []
 operators_specification = pathlib.Path("operations").read_text()
 operators_specification = parse_operators_specification(operators_specification)
-print("from typed_instructions import *")
-print("is_int = lambda num: num.removeprefix(\"-\").isdigit()")
-print("\n".join(generate_typechecker(operators_specification)))
+code.append("from typed_instructions import *")
+code.append("")
+code.append('is_int = lambda num: num.removeprefix("-").isdigit()')
+code.append("")
+code.append("")
+code += generate_typechecker(operators_specification)
+pathlib.Path("typechecker.py").write_text("".join(f"{line}\n" for line in code))

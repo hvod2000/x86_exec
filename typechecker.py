@@ -1,24 +1,43 @@
 from typed_instructions import *
+
 is_int = lambda num: num.removeprefix("-").isdigit()
+
+
 def typecheck(instr, registers, memory):
     match instr:
-        case OperatorMov(_, operand0, operand1, _) if operand0 in memory and is_int(operand1):
+        case OperatorMov(_, operand0, operand1, _) if (
+            operand0 in memory and is_int(operand1)
+        ):
             instr.size = memory[operand0][1]
             return True
 
-        case OperatorMov(_, operand0, operand1, _) if operand0 in memory and operand1 in registers and memory[operand0][1] == registers[operand1][1]:
+        case OperatorMov(_, operand0, operand1, _) if (
+            operand0 in memory
+            and operand1 in registers
+            and memory[operand0][1] == registers[operand1][1]
+        ):
             instr.size = memory[operand0][1]
             return True
 
-        case OperatorMov(_, operand0, operand1, _) if operand0 in registers and is_int(operand1):
+        case OperatorMov(_, operand0, operand1, _) if (
+            operand0 in registers and is_int(operand1)
+        ):
             instr.size = registers[operand0][1]
             return True
 
-        case OperatorMov(_, operand0, operand1, _) if operand0 in registers and operand1 in memory and registers[operand0][1] == memory[operand1][1]:
+        case OperatorMov(_, operand0, operand1, _) if (
+            operand0 in registers
+            and operand1 in memory
+            and registers[operand0][1] == memory[operand1][1]
+        ):
             instr.size = registers[operand0][1]
             return True
 
-        case OperatorMov(_, operand0, operand1, _) if operand0 in registers and operand1 in registers and registers[operand0][1] == registers[operand1][1]:
+        case OperatorMov(_, operand0, operand1, _) if (
+            operand0 in registers
+            and operand1 in registers
+            and registers[operand0][1] == registers[operand1][1]
+        ):
             instr.size = registers[operand0][1]
             return True
 
@@ -28,43 +47,75 @@ def typecheck(instr, registers, memory):
         case OperatorCwd(_):
             return True
 
-        case OperatorAdd(_, operand0, operand1, _) if operand0 in memory and is_int(operand1):
+        case OperatorAdd(_, operand0, operand1, _) if (
+            operand0 in memory and is_int(operand1)
+        ):
             instr.size = memory[operand0][1]
             return True
 
-        case OperatorAdd(_, operand0, operand1, _) if operand0 in memory and operand1 in registers and memory[operand0][1] == registers[operand1][1]:
+        case OperatorAdd(_, operand0, operand1, _) if (
+            operand0 in memory
+            and operand1 in registers
+            and memory[operand0][1] == registers[operand1][1]
+        ):
             instr.size = memory[operand0][1]
             return True
 
-        case OperatorAdd(_, operand0, operand1, _) if operand0 in registers and is_int(operand1):
+        case OperatorAdd(_, operand0, operand1, _) if (
+            operand0 in registers and is_int(operand1)
+        ):
             instr.size = registers[operand0][1]
             return True
 
-        case OperatorAdd(_, operand0, operand1, _) if operand0 in registers and operand1 in memory and registers[operand0][1] == memory[operand1][1]:
+        case OperatorAdd(_, operand0, operand1, _) if (
+            operand0 in registers
+            and operand1 in memory
+            and registers[operand0][1] == memory[operand1][1]
+        ):
             instr.size = registers[operand0][1]
             return True
 
-        case OperatorAdd(_, operand0, operand1, _) if operand0 in registers and operand1 in registers and registers[operand0][1] == registers[operand1][1]:
+        case OperatorAdd(_, operand0, operand1, _) if (
+            operand0 in registers
+            and operand1 in registers
+            and registers[operand0][1] == registers[operand1][1]
+        ):
             instr.size = registers[operand0][1]
             return True
 
-        case OperatorSub(_, operand0, operand1, _) if operand0 in memory and is_int(operand1):
+        case OperatorSub(_, operand0, operand1, _) if (
+            operand0 in memory and is_int(operand1)
+        ):
             instr.size = memory[operand0][1]
             return True
 
-        case OperatorSub(_, operand0, operand1, _) if operand0 in memory and operand1 in registers and memory[operand0][1] == registers[operand1][1]:
+        case OperatorSub(_, operand0, operand1, _) if (
+            operand0 in memory
+            and operand1 in registers
+            and memory[operand0][1] == registers[operand1][1]
+        ):
             instr.size = memory[operand0][1]
             return True
 
-        case OperatorSub(_, operand0, operand1, _) if operand0 in registers and is_int(operand1):
+        case OperatorSub(_, operand0, operand1, _) if (
+            operand0 in registers and is_int(operand1)
+        ):
             instr.size = registers[operand0][1]
             return True
 
-        case OperatorSub(_, operand0, operand1, _) if operand0 in registers and operand1 in memory and registers[operand0][1] == memory[operand1][1]:
+        case OperatorSub(_, operand0, operand1, _) if (
+            operand0 in registers
+            and operand1 in memory
+            and registers[operand0][1] == memory[operand1][1]
+        ):
             instr.size = registers[operand0][1]
             return True
 
-        case OperatorSub(_, operand0, operand1, _) if operand0 in registers and operand1 in registers and registers[operand0][1] == registers[operand1][1]:
+        case OperatorSub(_, operand0, operand1, _) if (
+            operand0 in registers
+            and operand1 in registers
+            and registers[operand0][1] == registers[operand1][1]
+        ):
             instr.size = registers[operand0][1]
             return True
 
