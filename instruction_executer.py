@@ -33,3 +33,7 @@ def execute(instruction, namespace):
             q, r = divmod(a[size * 2].u, operand.u)
             a[size] @= q
             d[size] @= r
+        case "define" | "":
+            pass
+        case _:
+            raise NotImplementedError(f"Unsupported operation: {repr(op)}")
