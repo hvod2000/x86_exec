@@ -46,8 +46,8 @@ class Int:
 
     def __imatmul__(self, value):
         value = value.u if isinstance(value, Int) else value
-        for b, i in self.location:
-            b[i] = (value >> i * 8) % 256
+        for i, (b, j) in enumerate(self.location):
+            b[j] = (value >> (i * 8)) % 256
         return self
 
     def __str__(self):
