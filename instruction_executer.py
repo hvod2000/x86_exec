@@ -2,43 +2,36 @@ from itertools import product
 
 
 def execute(instruction, namespace):
-    op, args = instruction.operation, instruction.args
-    get_var = lambda var: namespace[var]
-    get_sized = lambda var: (namespace[var], var[1])
+    if instruction.operation in ("define", ""):
+        return
     regs = product("ad", zip("xlh", (2, 1, 1)))
     ax, al, ah, dx, dl, dh = (namespace[n + m, s] for n, (m, s) in regs)
     a, d = [None, al, ax, ax @ dl, ax @ dx], [None, ah, dx]
-    match op:
+    size = next(iter(arg[1] for arg in instruction.args), None)
+    args = list(namespace[arg] for arg in instruction.args)
+    operand1, operand2, *_ = args + [None] * 2
+    match instruction.operation:
         case "mov":
-            target, source = map(get_var, args)
-            target @= source
+            operand1 @= operand2
         case "cbw":
             ax @= al.i
         case "cwd":
             ax_dx @= ax.i
         case "add":
-            target, source = map(get_var, args)
-            target @= target.i + source.i
+            operand1 += operand2
         case "sub":
-            target, source = map(get_var, args)
-            target @= target.i - source.i
+            operand1 -= operand2
         case "mul":
-            operand, size = get_sized(args[0])
-            a[2 * size] @= a[size].u * operand.u
+            a[2 * size] @= a[size].u * operand1.u
         case "imul":
-            operand, size = get_sized(args[0])
-            a[2 * size] @= a[size].i * operand.i
+            a[2 * size] @= a[size].i * operand1.i
         case "div":
-            operand, size = get_sized(args[0])
-            q, r = divmod(a[size * 2].u, operand.u)
+            q, r = divmod(a[size * 2].u, operand1.u)
             a[size] @= q
             d[size] @= r
         case "idiv":
-            operand, size = get_sized(args[0])
-            q, r = divmod(a[size * 2].i, operand.i)
+            q, r = divmod(a[size * 2].i, operand1.i)
             a[size] @= q
             d[size] @= r
-        case "define" | "":
-            pass
         case _:
             raise NotImplementedError(f"Unsupported operation: {repr(op)}")
