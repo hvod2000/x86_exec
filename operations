@@ -18,5 +18,8 @@ add m, r/imm
 sub r, r/m/imm
 sub m, r/imm
 
-# multiply al or ax by operand
+# unsigned multiply al or ax by operand
 mul r/m
+
+# signed multiply al or ax by operand
+imul r/m
