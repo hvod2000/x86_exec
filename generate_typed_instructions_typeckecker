@@ -92,13 +92,15 @@ def generate_typechecker(operators_specification):
     yield " " * 12 + "return False"
 
 
-code = []
-operators_specification = pathlib.Path("operations").read_text()
-operators_specification = parse_operators_specification(operators_specification)
-code.append("from typed_instructions import *")
-code.append("")
-code.append('is_int = lambda num: num.removeprefix("-").isdigit()')
-code.append("")
-code.append("")
-code += generate_typechecker(operators_specification)
-pathlib.Path("typechecker.py").write_text("".join(f"{line}\n" for line in code))
+if __name__ == "__main__":
+    code = []
+    specification = pathlib.Path("operations").read_text()
+    specification = parse_operators_specification(specification)
+    code.append("from typed_instructions import *")
+    code.append("")
+    code.append('is_int = lambda num: num.removeprefix("-").isdigit()')
+    code.append("")
+    code.append("")
+    code += generate_typechecker(specification)
+    code = "".join(f"{line}\n" for line in code)
+    pathlib.Path("typechecker.py").write_text(code)
