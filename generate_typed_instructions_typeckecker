@@ -1,0 +1,84 @@
+#!/bin/python3.10
+
+from tokenizer import tokenize
+from itertools import product
+import pathlib
+
+dict2fun = lambda dct: lambda name: dct.get(name, name)
+ARGUMENT_TYPES = {"r": "registers", "m": "memory", "imm": "immediate"}
+
+
+def parse_operators_specification(specification):
+    lines = (line.split("#")[0].strip() for line in specification.split("\n"))
+    source = [tokenize(line)[0] for line in lines if line]
+    operators, order = {}, []
+    for operator, *tokens in source:
+        if operator not in operators:
+            operators[operator] = set()
+            order.append(operator)
+        args = [[]]
+        for token in tokens:
+            if token == "/":
+                continue
+            elif token == ",":
+                args.append([])
+            else:
+                args[-1].append(token)
+        if not args[-1]:
+            args.pop()
+        for args in product(*args):
+            operators[operator].add(tuple(map(dict2fun(ARGUMENT_TYPES), args)))
+    return {k: operators[k] for k in order}
+
+
+def pascal_case(name):
+    return name[0].upper() + name[1:].lower()
+
+
+def generate_case(operator, argument_variants):
+    operator = "Operator" + pascal_case(operator)
+    operands_count = len(next(iter(argument_variants)))
+    if not operands_count:
+        return [" " * 8 + f"case {operator}(_):", " " * 12 + "return True"]
+    code = []
+    for operand_types in sorted(argument_variants):
+        operands = ", ".join(f"operand{i}" for i in range(operands_count))
+        code.append(" " * 8 + f"case {operator}(_, {operands}, _)")
+        conditions = []
+        for i, operand in enumerate(operand_types):
+            match operand:
+                case "immediate":
+                    conditions.append(f"is_int(operand{i})")
+                case variable_type:
+                    conditions.append(f"operand{i} in {variable_type}")
+        variables = [
+            i for i, arg in enumerate(operand_types) if arg != "immediate"
+        ]
+        if not variables:
+            raise ValueError("Unknown size of a constant operand")
+        for i, j in zip(variables, variables[1:]):
+            p, q = operand_types[i], operand_types[j]
+            conditions.append(f"{p}[operand{i}][1] == {q}[operand{j}][1]")
+        code[-1] += " if " + " and ".join(conditions) + ":"
+        var = f"{operand_types[variables[0]]}[operand{variables[0]}]"
+        code.append(" " * 12 + f"instr.size = {var}[1]")
+        code.append(" " * 12 + f"return True")
+        code.append("")
+    return code[:-1]
+
+
+def generate_typechecker(operators_specification):
+    yield " " * 0 + "def typecheck(instr, registers, memory):"
+    yield " " * 4 + "match instr:"
+    for operator, operand_options in operators_specification.items():
+        yield from generate_case(operator, operand_options)
+        yield ""
+    yield " " * 8 + "case _:"
+    yield " " * 12 + "return False"
+
+
+operators_specification = pathlib.Path("operations").read_text()
+operators_specification = parse_operators_specification(operators_specification)
+print("from typed_instructions import *")
+print("is_int = lambda num: num.removeprefix(\"-\").isdigit()")
+print("\n".join(generate_typechecker(operators_specification)))
