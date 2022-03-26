@@ -2,11 +2,8 @@
 
 from tokenizer import tokenize
 from itertools import product
+import specification
 import pathlib
-
-dict2fun = lambda dct: lambda name: dct.get(name, name)
-ARGUMENT_TYPES = {"r": "registers", "m": "memory", "imm": "immediate"}
-
 
 def conditions_to_str(conditions, current_indent=0, indent=0):
     result = "if " + " and ".join(conditions) + ":"
@@ -19,30 +16,6 @@ def conditions_to_str(conditions, current_indent=0, indent=0):
     for i, cond in enumerate(conditions):
         result.append(" " * (indent + 4) + "and " * bool(i) + cond)
     return result + [" " * indent + "):"]
-
-
-def parse_operators_specification(specification):
-    lines = (line.split("#")[0].strip() for line in specification.split("\n"))
-    source = [tokenize(line)[0] for line in lines if line]
-    operators, order = {}, []
-    for operator, *tokens in source:
-        if operator not in operators:
-            operators[operator] = set()
-            order.append(operator)
-        args = [[]]
-        for token in tokens:
-            if token == "/":
-                continue
-            elif token == ",":
-                args.append([])
-            else:
-                args[-1].append(token)
-        if not args[-1]:
-            args.pop()
-        for args in product(*args):
-            operators[operator].add(tuple(map(dict2fun(ARGUMENT_TYPES), args)))
-    return {k: operators[k] for k in order}
-
 
 def pascal_case(name):
     return name[0].upper() + name[1:].lower()
@@ -94,13 +67,11 @@ def generate_typechecker(operators_specification):
 
 if __name__ == "__main__":
     code = []
-    specification = pathlib.Path("operations").read_text()
-    specification = parse_operators_specification(specification)
     code.append("from typed_instructions import *")
     code.append("")
     code.append('is_int = lambda num: num.removeprefix("-").isdigit()')
     code.append("")
     code.append("")
-    code += generate_typechecker(specification)
+    code += generate_typechecker(specification.operators)
     code = "".join(f"{line}\n" for line in code)
     pathlib.Path("typechecker.py").write_text(code)
