@@ -145,6 +145,27 @@ def compile_factor(tokens, i):
     return i + 1, f"mov ax, {variable}\npush ax\n"
 
 
+def optimize_assembly(assembly: str):
+    lines = []
+    for line in assembly.split("\n"):
+        if line == "pop ax":
+            if lines[-1] == "push ax":
+                lines.pop()
+            elif lines[-1] == "push bx":
+                lines[-1] = "mov ax, bx"
+            else:
+                lines.append(line)
+        elif line == "pop bx":
+            if lines[-1] == "push bx":
+                lines.pop()
+            elif lines[-1] == "push ax":
+                lines[-1] = "mov bx, ax"
+            else:
+                lines.append(line)
+        else:
+            lines.append(line)
+    return "\n".join(lines)
+
 def prettify_assembly(assembly: str):
     lines = []
     for line in assembly.strip().split("\n"):
@@ -154,7 +175,7 @@ def prettify_assembly(assembly: str):
     return "\n".join(lines)
 
 
-print(prettify_assembly(compile("""
+print(prettify_assembly(optimize_assembly(compile("""
 int a = 8
 int b = 3
 int c = 5
@@ -166,4 +187,4 @@ def main():
         RES = b - ( c + a / d ) * b
     else
         RES = a / b + c - d * a
-""")))
+"""))))
