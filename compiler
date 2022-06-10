@@ -97,6 +97,9 @@ def compile_if(tokens, i):
     assert tokens[i] == "if"
     label = f"if_{get_uid()}"
     i, condition = compile_comparison(tokens, i + 1, label)
+    while tokens[i] == "and":
+        i, next_condition = compile_comparison(tokens, i + 1, label)
+        condition += next_condition
     assert tokens[i] == "INDENT"
     i, then_branch = compile_statements(tokens, i + 1)
     assert tokens[i] == "DEINDENT"
