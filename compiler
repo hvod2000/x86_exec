@@ -136,9 +136,9 @@ def compile_term(tokens, i):
         i, expr = compile_factor(tokens, i + 1)
         code += expr
         if operator == "*":
-            code += "pop bx\npop ax\nmul bx\npush ax\n"
+            code += "pop bx\npop ax\nimul bx\npush ax\n"
         else:
-            code += "pop bx\npop ax\ncwd\ndiv bx\npush ax\n"
+            code += "pop bx\npop ax\ncwd\nidiv bx\npush ax\n"
     return i, code
 
 
