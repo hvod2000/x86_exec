@@ -31,31 +31,43 @@ def tokenize(source: str):
 
 
 def compile(source: str):
-    #i, tokens = 0, source.replace("\n", " ").replace("\t", " ").split(" ")
-    #tokens = [token for token in tokens if token] + ["END"]
-    i, tokens, code = 0, tokenize(source), []
-    while tokens[i] != "END":
+    return compile_statements(tokenize(source), 0)[1]
+
+
+def compile_statements(tokens, i):
+    code = []
+    while i < len(tokens) and tokens[i] not in {"END", "DEINDENT"}:
         i, line = compile_statement(tokens, i)
         code.append(line)
-    return "".join(code)
+    return i, "".join(code)
 
 
 def compile_statement(tokens: List[str], i: int):
     global variables
     if tokens[i] in types:
-        var_type = tokens[i]
-        variable = tokens[i + 1]
-        if variable in variables:
-            print(f"WARNING: {variable} is already defined")
-        assert tokens[i + 2] == "="
-        value = tokens[i + 3]
-        variables[variable] = var_type
-        typ = {"int": "dw", "i8": "db", "i8[]": "db"}[var_type]
-        return i + 4, f"{variable} {typ} {value}\n"
+        return compile_declaration(tokens, i)
+    if tokens[i] == "def":
+        label = tokens[i + 1].split("(", 1)[0]
+        assert tokens[i + 2] == "INDENT"
+        i, body = compile_statements(tokens, i + 3)
+        return i + 1, f"{label}:\n" + body
     variable = tokens[i]
     assert tokens[i + 1] == "="
     i, expr = compile_expression(tokens, i + 2)
     return i, expr + f"pop ax\nmov {variable}, ax\n"
+
+
+def compile_declaration(tokens, i):
+    global variables
+    var_type = tokens[i]
+    variable = tokens[i + 1]
+    if variable in variables:
+        print(f"WARNING: {variable} is already defined")
+    assert tokens[i + 2] == "="
+    value = tokens[i + 3]
+    variables[variable] = var_type
+    typ = {"int": "dw", "i8": "db", "i8[]": "db"}[var_type]
+    return i + 4, f"{variable} {typ} {value}\n"
 
 
 def compile_expression(tokens: List[str], i: int):
@@ -102,5 +114,7 @@ int b = 3
 int c = 5
 int d = -2
 int RES = 0
-RES = a / b + c - d * a
+
+def main():
+    RES = a / b + c - d * a
 """).replace("\n", "\n\t"))
