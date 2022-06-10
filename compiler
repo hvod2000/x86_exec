@@ -7,6 +7,11 @@ from typing import List
 # var = expr
 
 
+ids = 0
+def get_uid():
+    global ids
+    ids += 1
+    return ids - 1
 types = {"int", "i8", "i8[]"}
 variables = {}
 
@@ -25,7 +30,7 @@ def tokenize(source: str):
         while indent < indents[-1]:
             tokens.append("DEINDENT")
             indents.pop()
-            assert indents[-1] == indent
+        assert indents[-1] == indent
         tokens += [token for token in line[indent:].split(" ") if token]
     return tokens + ["END"]
 
@@ -54,10 +59,28 @@ def compile_statement(tokens: List[str], i: int):
         assert tokens[i + 2] == "INDENT"
         i, body = compile_statements(tokens, i + 3)
         return i + 1, f"{label}:\n" + body
+    elif tokens[i] == "if":
+        return compile_if(tokens, i)
     variable = tokens[i]
     assert tokens[i + 1] == "="
     i, expr = compile_expression(tokens, i + 2)
     return i, expr + f"pop ax\nmov {variable}, ax\n"
+
+
+def compile_if(tokens, i):
+    assert tokens[i] == "if"
+    label = f"if_{get_uid()}"
+    i, condition = compile_comparison(tokens, i + 1, label)
+    assert tokens[i] == "INDENT"
+    i, then_branch = compile_statements(tokens, i + 1)
+    assert tokens[i] == "DEINDENT"
+    assert tokens[i + 1] == "else"
+    assert tokens[i + 2] == "INDENT"
+    i, else_branch = compile_statements(tokens, i + 3)
+    assert tokens[i] == "DEINDENT"
+    code = f"{condition}{then_branch}jmp {label}_end\n"
+    code += f"{label}_else:\n{else_branch}{label}_end:\n"
+    return i + 1, code
 
 
 def compile_comparison(tokens, i, if_name):
@@ -66,8 +89,9 @@ def compile_comparison(tokens, i, if_name):
     assert operator in {"<", ">", "<=", ">="}
     i, expr2 = compile_expression(tokens, i + 1)
     code = expr1 + expr2 + "\npop bx\npop ax\ncmp ax, bx\n"
+    operator = {">": "<=", "<": ">=", ">=": "<", "<=": ">"}[operator]
     jmp = {"<": "JL", ">": "JG", "<=": "JLE", ">=": "JGE"}[operator]
-    return code + f"{jmp} {if_name}_else\n"
+    return i, code + f"{jmp} {if_name}_else\n"
 
 
 def compile_declaration(tokens, i):
@@ -117,7 +141,7 @@ def compile_factor(tokens, i):
         literal = tokens[i]
         return i + 1, f"mov ax, {literal}\npush ax\n"
     variable = tokens[i]
-    assert variable in variables
+    assert variable in variables, variable
     return i + 1, f"mov ax, {variable}\npush ax\n"
 
 
@@ -138,5 +162,8 @@ int d = -2
 int RES = 0
 
 def main():
-    RES = a / b + c - d * a
+    if a * d >= 0
+        RES = b - ( c + a / d ) * b
+    else
+        RES = a / b + c - d * a
 """)))
