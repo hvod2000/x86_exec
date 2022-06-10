@@ -195,6 +195,14 @@ def compile_factor(tokens, i, target_type):
             return i + 1, f"mov al, {variable}\npush al\n"
     assert False, f"What to do with {variable}:{variables[variable]}?"
 
+def align_stack(assembly: str):
+    lines = []
+    for line in assembly.split("\n"):
+        if line in {"push al", "push bl", "pop al", "pop bl"}:
+            lines.append(line.replace("l", "x"))
+        else:
+            lines.append(line)
+    return "\n".join(lines)
 
 def optimize_assembly(assembly: str):
     lines = ["START"]
@@ -242,11 +250,15 @@ def main():
 """
 
 source = """
-i8 a = 3
+i8 a = 5
 i8 b = 5
-i8 y = 0
+i8 c = 5
+i8 result = 0
 
 def main()
-    y = a + b
+    if a + b > c and a + c > b and c + b > a
+        result = 1
+    else
+        result = 0
 """
-print(prettify_assembly(optimize_assembly(compile(source))))
+print(prettify_assembly(align_stack(optimize_assembly(compile(source)))))
