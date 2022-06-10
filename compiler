@@ -23,7 +23,11 @@ variables = {}
 
 
 def warnging(msg):
-    print(f"\033[31mWARNING: {msg}\033[0m")
+    print(f"\033[33mWARNING: {msg}\033[0m")
+
+def error(msg):
+    print(f"\033[31m ERRROR: {msg}\033[0m")
+    exit(42)
 
 def tokenize(source: str):
     lines = source.split("\n")
@@ -75,7 +79,7 @@ def compile_statement(tokens: List[str], i: int):
         return compile_if(tokens, i)
     variable = tokens[i]
     if variable not in variables:
-        warnging(f"variable {variable} is not defined")
+        error(f"variable {variable} is not defined")
     assert tokens[i + 1] == "="
     i, expr = compile_expression(tokens, i + 2, variables[variable])
     if variables[variable] == "int":
