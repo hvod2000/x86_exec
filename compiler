@@ -90,7 +90,7 @@ def compile_statement(tokens: List[str], i: int):
     i, expr = compile_expression(tokens, i + 2, variables[variable])
     if variables[variable] == "int":
         return i, expr + f"pop ax\nmov {variable}, ax\n"
-    return i, expr + f"pop ax\nmov {variable}, al\n"
+    return i, expr + f"pop al\nmov {variable}, al\n"
 
 
 def compile_if(tokens, i):
@@ -146,9 +146,9 @@ def compile_expression(tokens: List[str], i: int, target_type: str = "int"):
                 code += "pop bx\npop ax\nsub ax, bx\npush ax\n"
         else:
             if operator == "+":
-                code += "pop bx\npop ax\nadd al, bl\npush ax\n"
+                code += "pop bl\npop al\nadd al, bl\npush al\n"
             else:
-                code += "pop bx\npop ax\nsub al, bl\npush ax\n"
+                code += "pop bl\npop al\nsub al, bl\npush al\n"
     return i, code
 
 
@@ -164,11 +164,11 @@ def compile_term(tokens, i, target_type):
             else:
                 code += "pop bx\npop ax\ncwd\nidiv bx\npush ax\n"
         else:
-            code += "pop ax\ncbw\nmov bx, ax\n"
+            code += "pop al\ncbw\nmov bx, ax\n"
             if operator == "*":
-                code += "pop ax\nimul bx\npush ax\n"
+                code += "pop ax\nimul bx\npush al\n"
             else:
-                code += "pop ax\ncwd\nidiv bx\npush ax\n"
+                code += "pop ax\ncwd\nidiv bx\npush al\n"
     return i, code
 
 
@@ -180,7 +180,7 @@ def compile_factor(tokens, i, target_type):
         literal = tokens[i]
         if target_type == "int":
             return i + 1, f"mov ax, {literal}\npush ax\n"
-        return i + 1, f"mov al, {literal}\npush ax\n"
+        return i + 1, f"mov al, {literal}\npush al\n"
     variable = tokens[i]
     assert variable in variables, variable
     if target_type == "int":
@@ -190,9 +190,9 @@ def compile_factor(tokens, i, target_type):
             return i + 1, f"mov al, {variable}\ncbw\npush ax\n"
     else:
         if variables[variable] == "int":
-            return i + 1, f"mov ax, {variable}\npush ax\n"
+            return i + 1, f"mov ax, {variable}\npush al\n"
         if variables[variable] == "i8":
-            return i + 1, f"mov al, {variable}\npush ax\n"
+            return i + 1, f"mov al, {variable}\npush al\n"
     assert False, f"What to do with {variable}:{variables[variable]}?"
 
 
