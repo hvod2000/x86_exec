@@ -38,7 +38,7 @@ def tokenize(source: str):
 def compile(source: str):
     code = compile_statements(tokenize(source), 0)[1]
     if code.find("main:") != -1:
-        code = "jmp main\n" + code
+        code = f"jmp main\n{code}hlt\n"
     return code
 
 
