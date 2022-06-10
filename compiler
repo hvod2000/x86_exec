@@ -5,6 +5,12 @@ from typing import List
 # ---- GRAMMAR ----
 # type var = expr
 # var = expr
+# if condition
+#     ...
+# else
+#     ...
+# def function()
+#     ...
 
 
 ids = 0
@@ -88,7 +94,7 @@ def compile_comparison(tokens, i, if_name):
     operator = tokens[i]
     assert operator in {"<", ">", "<=", ">="}
     i, expr2 = compile_expression(tokens, i + 1)
-    code = expr1 + expr2 + "\npop bx\npop ax\ncmp ax, bx\n"
+    code = expr1 + expr2 + "pop bx\npop ax\ncmp ax, bx\n"
     operator = {">": "<=", "<": ">=", ">=": "<", "<=": ">"}[operator]
     jmp = {"<": "JL", ">": "JG", "<=": "JLE", ">=": "JGE"}[operator]
     return i, code + f"{jmp} {if_name}_else\n"
@@ -129,7 +135,7 @@ def compile_term(tokens, i):
         if operator == "*":
             code += "pop bx\npop ax\nmul bx\npush ax\n"
         else:
-            code += "pop bx\npop ax\nmov dx, 0\ndiv bx\npush ax\n"
+            code += "pop bx\npop ax\ncwd\ndiv bx\npush ax\n"
     return i, code
 
 
@@ -142,7 +148,11 @@ def compile_factor(tokens, i):
         return i + 1, f"mov ax, {literal}\npush ax\n"
     variable = tokens[i]
     assert variable in variables, variable
-    return i + 1, f"mov ax, {variable}\npush ax\n"
+    if variables[variable] == "int":
+        return i + 1, f"mov ax, {variable}\npush ax\n"
+    if variables[variable] == "i8":
+        return i + 1, f"mov al, {variable}\ncbw\npush ax\n"
+    assert False, f"What to do with {variable}:{variables[variable]}?"
 
 
 def optimize_assembly(assembly: str):
@@ -178,8 +188,8 @@ def prettify_assembly(assembly: str):
 print(prettify_assembly(optimize_assembly(compile("""
 int a = 8
 int b = 3
-int c = 5
-int d = -2
+i8 c = 5
+i8 d = -2
 int RES = 0
 
 def main():
