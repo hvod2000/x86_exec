@@ -83,6 +83,8 @@ def compile_statement(tokens: List[str], i: int):
         return i + 1, f"{label}:\n" + body
     elif tokens[i] == "if":
         return compile_if(tokens, i)
+    elif tokens[i] == "while":
+        return compile_while(tokens, i)
     variable = tokens[i]
     if variable not in variables:
         error(f"variable {variable} is not defined")
@@ -96,10 +98,7 @@ def compile_statement(tokens: List[str], i: int):
 def compile_if(tokens, i):
     assert tokens[i] == "if"
     label = f"if_{get_uid()}"
-    i, condition = compile_comparison(tokens, i + 1, label)
-    while tokens[i] == "and":
-        i, next_condition = compile_comparison(tokens, i + 1, label)
-        condition += next_condition
+    i, condition = compile_boolean_expression(tokens, i + 1, f"{label}_else")
     assert tokens[i] == "INDENT"
     i, then_branch = compile_statements(tokens, i + 1)
     assert tokens[i] == "DEINDENT"
@@ -111,8 +110,26 @@ def compile_if(tokens, i):
     code += f"{label}_else:\n{else_branch}{label}_end:\n"
     return i + 1, code
 
+def compile_while(tokens, i):
+    assert tokens[i] == "while"
+    label = f"if_{get_uid()}"
+    i, condition = compile_boolean_expression(tokens, i + 1, f"{label}_end")
+    assert tokens[i] == "INDENT"
+    i, inner_loop = compile_statements(tokens, i + 1)
+    assert tokens[i] == "DEINDENT"
+    code = f"{label}_begin:\n{condition}{inner_loop}jmp {label}_begin\n"
+    code += f"{label}_end:\n"
+    return i + 1, code
 
-def compile_comparison(tokens, i, if_name):
+def compile_boolean_expression(tokens, i, label):
+    i, condition = compile_comparison(tokens, i, label)
+    while tokens[i] == "and":
+        i, next_condition = compile_comparison(tokens, i + 1, label)
+        condition += next_condition
+    return i, condition
+
+
+def compile_comparison(tokens, i, label):
     i, expr1 = compile_expression(tokens, i)
     operator = tokens[i]
     assert operator in {"<", ">", "<=", ">="}
@@ -120,7 +137,7 @@ def compile_comparison(tokens, i, if_name):
     code = expr1 + expr2 + "pop bx\npop ax\ncmp ax, bx\n"
     operator = {">": "<=", "<": ">=", ">=": "<", "<=": ">"}[operator]
     jmp = {"<": "JL", ">": "JG", "<=": "JLE", ">=": "JGE"}[operator]
-    return i, code + f"{jmp} {if_name}_else\n"
+    return i, code + f"{jmp} {label}\n"
 
 
 def compile_declaration(tokens, i):
@@ -253,15 +270,11 @@ def main():
 """
 
 source = """
-i8 a = 5
-i8 b = 5
-i8 c = 5
-i8 result = 0
+int x = 10
+i8 z = 0
 
 def main()
-    if a + b > c and a + c > b and c + b > a
-        result = 1
-    else
-        result = 0
+    while ( z + 1 ) * ( z + 1 ) <= x
+        z = z + 1
 """
 print(prettify_assembly(align_stack(optimize_assembly(compile(source)))))
