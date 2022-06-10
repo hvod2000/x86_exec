@@ -31,7 +31,10 @@ def tokenize(source: str):
 
 
 def compile(source: str):
-    return compile_statements(tokenize(source), 0)[1]
+    code = compile_statements(tokenize(source), 0)[1]
+    if code.find("main:") != -1:
+        code = "jmp main\n" + code
+    return code
 
 
 def compile_statements(tokens, i):
@@ -108,7 +111,16 @@ def compile_factor(tokens, i):
     return i + 1, f"mov ax, {variable}\npush ax\n"
 
 
-print("\t"+compile("""
+def prettify_assembly(assembly: str):
+    lines = []
+    for line in assembly.strip().split("\n"):
+        if line and not line.endswith(":"):
+            line = "\t" + line
+        lines.append(line)
+    return "\n".join(lines)
+
+
+print(prettify_assembly(compile("""
 int a = 8
 int b = 3
 int c = 5
@@ -117,4 +129,4 @@ int RES = 0
 
 def main():
     RES = a / b + c - d * a
-""").replace("\n", "\n\t"))
+""")))
