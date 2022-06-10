@@ -10,11 +10,30 @@ from typing import List
 types = {"int", "i8", "i8[]"}
 variables = {}
 
+def tokenize(source: str):
+    lines = source.split("\n")
+    indents = [0]
+    tokens = []
+    for line in lines:
+        indent = 0
+        while indent < len(line) and line[indent] in " \t":
+            indent += 1
+        if indent > indents[-1]:
+            indents.append(indent)
+            tokens.append("INDENT")
+        while indent < indents[-1]:
+            tokens.append("DEINDENT")
+            indents.pop()
+            assert indents[-1] == indent
+        tokens += [token for token in line[indent:].split(" ") if token]
+    return tokens + ["END"]
+
+
 
 def compile(source: str):
-    i, tokens = 0, source.replace("\n", " ").replace("\t", " ").split(" ")
-    tokens = [token for token in tokens if token] + ["END"]
-    code = []
+    #i, tokens = 0, source.replace("\n", " ").replace("\t", " ").split(" ")
+    #tokens = [token for token in tokens if token] + ["END"]
+    i, tokens, code = 0, tokenize(source), []
     while tokens[i] != "END":
         i, line = compile_statement(tokens, i)
         code.append(line)
@@ -84,4 +103,4 @@ int c = 5
 int d = -2
 int RES = 0
 RES = a / b + c - d * a
-        """).replace("\n", "\n\t"))
+""").replace("\n", "\n\t"))
