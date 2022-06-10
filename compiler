@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+from typing import List
+
+
+# ---- GRAMMAR ----
+# type var = expr
+# var = expr
+
+
+types = {"int", "i8", "i8[]"}
+variables = {}
+
+
+def compile(source: str):
+    i, tokens = 0, source.replace("\n", " ").replace("\t", " ").split(" ")
+    tokens = [token for token in tokens if token] + ["END"]
+    code = []
+    while tokens[i] != "END":
+        i, line = compile_statement(tokens, i)
+        code.append(line)
+    return "".join(code)
+
+
+def compile_statement(tokens: List[str], i: int):
+    global variables
+    if tokens[i] in types:
+        var_type = tokens[i]
+        variable = tokens[i + 1]
+        if variable in variables:
+            print(f"WARNING: {variable} is already defined")
+        assert tokens[i + 2] == "="
+        value = tokens[i + 3]
+        variables[variable] = var_type
+        typ = {"int": "dw", "i8": "db", "i8[]": "db"}[var_type]
+        return i + 4, f"{variable} {typ} {value}\n"
+    variable = tokens[i]
+    assert tokens[i + 1] == "="
+    i, expr = compile_expression(tokens, i + 2)
+    return i, expr + f"pop ax\nmov {variable}, ax\n"
+
+
+def compile_expression(tokens: List[str], i: int):
+    i, code = compile_term(tokens, i)
+    while tokens[i] in "+-":
+        operator = tokens[i]
+        i, expr = compile_term(tokens, i + 1)
+        code += expr
+        if operator == "+":
+            code += "pop bx\npop ax\nadd ax, bx\npush ax\n"
+        else:
+            code += "pop bx\npop ax\nsub ax, bx\npush ax\n"
+    return i, code
+
+
+def compile_term(tokens, i):
+    i, code = compile_factor(tokens, i)
+    while tokens[i] in "*/":
+        operator = tokens[i]
+        i, expr = compile_factor(tokens, i + 1)
+        code += expr
+        if operator == "*":
+            code += "pop bx\npop ax\nmul bx\npush ax\n"
+        else:
+            code += "pop bx\npop ax\nmov dx, 0\ndiv bx\npush ax\n"
+    return i, code
+
+
+def compile_factor(tokens, i):
+    if tokens[i] == "(":
+        i, code = compile_expression(tokens, i + 1)
+        return i + 1, code
+    if tokens[i].isdigit():
+        literal = tokens[i]
+        return i + 1, f"mov ax, {literal}\npush ax\n"
+    variable = tokens[i]
+    assert variable in variables
+    return i + 1, f"mov ax, {variable}\npush ax\n"
+
+
+print("\t"+compile("""
+int a = 8
+int b = 3
+int c = 5
+int d = -2
+int RES = 0
+RES = a / b + c - d * a
+        """).replace("\n", "\n\t"))
