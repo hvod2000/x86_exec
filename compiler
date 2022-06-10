@@ -41,10 +41,13 @@ def tokenize(source: str):
     return tokens + ["END"]
 
 
-def compile(source: str):
+def compile(source: str, target: str = "WINTER"):
     code = compile_statements(tokenize(source), 0)[1]
     if code.find("main:") != -1:
-        code = f"jmp main\n{code}hlt\n"
+        if target == "WINTER":
+            code = f"jmp main\n{code}halt:\njmp halt ;$E\n"
+        else:
+            code = f"jmp main\n{code}hlt\n"
     return code
 
 
