@@ -72,16 +72,19 @@ def derive_type(expression, scopes):
             return Type(array.sign, index.elements, array.byte_lvl)
 
 
-def typecheck(programm, scopes=()):
-    scope = {}
+def typecheck(programm, scopes=(), scope=None):
+    if scope is None:
+        scope = {}
     scopes = (scope,) + scopes
     for statement in programm:
         match statement:
-            case Assignment(_, variables, values):
-                new_variables = {
-                    v.name: Object(0, derive_type(e, scopes)) for v, e in zip(variables, values)
-                }
-                scope.update(new_variables)
+            case Assignment(_, variables, expressions):
+                new_types = {}
+                for var, expr in zip(variables, expressions):
+                    new_types[var.name] = derive_type(expr, scopes)
+                for var, typ in new_types.items():
+                    value = scope[var].value if var in scope else (0,) * typ.elements
+                    scope[var] = Object(value, typ)
             case _:
                 raise ValueError("0_0")
     return scope

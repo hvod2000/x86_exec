@@ -1,0 +1,54 @@
+#!/bin/python3
+
+from parser import parse
+from printer import ast2str
+from executer import execute
+from typechecking import typecheck
+from pathlib import Path
+
+import sys
+
+
+class DictWithMemory(dict):
+    def __init__(self, *args, **kwargs):
+        self.memory = {}
+        super().__init__(*args, **kwargs)
+
+    def __setitem__(self, i, value):
+        self.memory[i] = value
+        super().__setitem__(i, value)
+
+    def get_updates(self):
+        updates = self.memory
+        self.memory = {}
+        return updates
+
+
+def print_variables(variables):
+    for var, obj in variables.items():
+        value = (
+            "[" + ", ".join(map(str, obj.value)) + "]"
+            if len(obj.value) > 1
+            else str(obj.value[0])
+        )
+        print(" ", var, "=", value, ":", obj.type)
+
+
+if len(sys.argv) == 1:
+    scope = DictWithMemory()
+    while True:
+        ast = parse(input("> "))
+        typecheck(ast, scope=scope)
+        execute(ast, (scope,))
+        print_variables(scope.get_updates())
+
+
+for source in sys.argv[1:]:
+    source = Path(source).read_text()
+    ast = parse(source)
+    scope = DictWithMemory(typecheck(ast))
+    # print("scope", scope)
+    for line in ast:
+        print(">", ast2str(line))
+        execute(line, (scope,))
+        print_variables(scope.get_updates())

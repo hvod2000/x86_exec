@@ -155,7 +155,7 @@ def parse_comparison(tokens, i):
 def parse_arithmetic(tokens, i):
     if tokens[i].literal == "-":
         j, (i, result) = i, parse_product(tokens, i + 1)
-        resulc = UnaryOperation(tokens[j], "-", result)
+        result = UnaryOperation(tokens[j], "-", result)
     else:
         i, result = parse_product(tokens, i)
     while tokens[i].literal in "+-":

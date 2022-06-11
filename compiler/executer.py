@@ -19,7 +19,7 @@ def evaluate(expression, scopes):
         case Byte(_, value) | Number(_, value):
             return Object((int(value),), typ)
         case Array(pos, items):
-            items = tuple(evaluate(item, scopes) for item in items)
+            items = tuple(get_value(evaluate(item, scopes))[0] for item in items)
             return Object(items, typ)
         case Variable(pos, var):
             return next(scope[var] for scope in scopes if var in scope)
@@ -53,7 +53,7 @@ def evaluate(expression, scopes):
                     return gen_obj([x * y for x, y in xy], typ)
                 case "/":
                     xy = zip_longest(x, y, fillvalue=1)
-                    return gen_obj([x / y for x, y in xy], typ)
+                    return gen_obj([x // y for x, y in xy], typ)
                 case op:
                     raise Exception(f"unsupported operation: {op}")
         case UnaryOperation(_, operation, argument):
