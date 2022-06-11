@@ -6,11 +6,13 @@ Type = namedtuple("Type", "sign elements byte_lvl")
 
 # type -- (signed/unsigned, number_of elements)
 
+
 def ilog(x, b=2):
     result = 0
-    while b ** result < x:
+    while b**result < x:
         result += 1
     return result
+
 
 def unify_types(typ, *types):
     for t in types:
@@ -58,7 +60,7 @@ def derive_type(expression, scopes):
             return derive_type(argument, scopes)
         case TypeCast(_, _, typ):
             assert typ.name[0] in "iu"
-            return Type(typ.name[0], 1, ilog(int(typ.name[1:]) // 8, 2))
+            return Type(typ.name[0], 1, ilog((int(typ.name[1:]) + 7) // 8, 2))
         case Indexing(_, array, _):
             array = derive_type(array, scopes)
             return Type(array.sign, 1, array.byte_lvl)
