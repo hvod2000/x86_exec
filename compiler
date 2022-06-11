@@ -108,12 +108,15 @@ def compile_if(tokens, i):
     assert tokens[i] == "INDENT"
     i, then_branch = compile_statements(tokens, i + 1)
     assert tokens[i] == "DEINDENT"
-    assert tokens[i + 1] == "else"
-    assert tokens[i + 2] == "INDENT"
-    i, else_branch = compile_statements(tokens, i + 3)
-    assert tokens[i] == "DEINDENT"
+    if tokens[i + 1] == "else":
+        assert tokens[i + 2] == "INDENT"
+        i, else_branch = compile_statements(tokens, i + 3)
+        assert tokens[i] == "DEINDENT"
+        code = f"{condition}{then_branch}jmp {label}_end\n"
+        code += f"{label}_else:\n{else_branch}{label}_end:\n"
+        return i + 1, code
     code = f"{condition}{then_branch}jmp {label}_end\n"
-    code += f"{label}_else:\n{else_branch}{label}_end:\n"
+    code += f"{label}_else:\n{label}_end:\n"
     return i + 1, code
 
 def compile_while(tokens, i):
@@ -138,11 +141,11 @@ def compile_boolean_expression(tokens, i, label):
 def compile_comparison(tokens, i, label):
     i, expr1 = compile_expression(tokens, i)
     operator = tokens[i]
-    assert operator in {"<", ">", "<=", ">="}
+    assert operator in {"<", ">", "<=", ">=", "=="}
     i, expr2 = compile_expression(tokens, i + 1)
     code = expr1 + expr2 + "pop bx\npop ax\ncmp ax, bx\n"
-    operator = {">": "<=", "<": ">=", ">=": "<", "<=": ">"}[operator]
-    jmp = {"<": "JL", ">": "JG", "<=": "JLE", ">=": "JGE"}[operator]
+    operator = {">": "<=", "<": ">=", ">=": "<", "<=": ">", "==": "!="}[operator]
+    jmp = {"<": "JL", ">": "JG", "<=": "JLE", ">=": "JGE", "!=":"JNE"}[operator]
     return i, code + f"{jmp} {label}\n"
 
 
@@ -180,13 +183,15 @@ def compile_expression(tokens: List[str], i: int, target_type: str = "int"):
 
 def compile_term(tokens, i, target_type):
     i, code = compile_factor(tokens, i, target_type)
-    while tokens[i] in {"*", "/", "./"}:
+    while tokens[i] in {"*", "/", "./", "%"}:
         operator = tokens[i]
         i, expr = compile_factor(tokens, i + 1, "int")
         code += expr
         if target_type == "int":
             if operator == "*":
                 code += "pop bx\npop ax\nimul bx\npush ax\n"
+            elif operator == "%":
+                code += "pop bx\npop ax\ncwd\nidiv bx\npush dx\n"
             elif operator == "/":
                 code += "pop bx\npop ax\ncwd\nidiv bx\npush ax\n"
             else:
@@ -195,6 +200,8 @@ def compile_term(tokens, i, target_type):
             code += "pop al\ncbw\nmov bx, ax\n"
             if operator == "*":
                 code += "pop ax\nimul bx\npush al\n"
+            elif operator == "%":
+                code += "pop ax\ncwd\nidiv bx\npush dl\n"
             elif operator == "/":
                 code += "pop ax\ncwd\nidiv bx\npush al\n"
             else:
@@ -283,18 +290,19 @@ def main():
 """
 
 source = """
-i8 n = 4
-int sum = 0
-int a = 1
-int b = 0
-int c = 0
+i8 a = 6
+i8 b = 2
+int no = 1
+int gcd = 0
 
 def main()
-    while n > 0 
-        c = a + b
-        sum = sum + c
-        a = b
-        b = c
-        n -= 1
+    while no < 256
+        if a % no == 0 and b % no == 0
+            gcd = no
+        no += 1
+    if a > b
+        no = a * b / gcd
+    else
+        no = gcd
 """
 print(prettify_assembly(align_stack(optimize_assembly(compile(source)))))
