@@ -11,6 +11,7 @@ from typing import List
 #     ...
 # def function()
 #     ...
+LONG_JUMPS = True
 REGISTERS = {"ax", "bx", "al", "bl"}
 
 ids = 0
@@ -30,6 +31,13 @@ def warnging(msg):
 def error(msg):
     print(f"\033[31m ERRROR: {msg}\033[0m")
     exit(42)
+
+
+def jump(jmp, label):
+    if LONG_JUMPS:
+        uid = "long_jump_" + str(get_uid())
+        return f"{jmp} {uid}\njmp {uid}_end\n{uid}:\njmp {label}\n{uid}_end:\n"
+    return f"{jmp} {label}\n"
 
 
 def tokenize(source: str):
@@ -141,12 +149,12 @@ def compile_boolean_expression(tokens, i, label):
 def compile_comparison(tokens, i, label):
     i, expr1 = compile_expression(tokens, i)
     operator = tokens[i]
-    assert operator in {"<", ">", "<=", ">=", "=="}
+    assert operator in {"<", ">", "<=", ">=", "==", "!="}
     i, expr2 = compile_expression(tokens, i + 1)
     code = expr1 + expr2 + "pop bx\npop ax\ncmp ax, bx\n"
-    operator = {">": "<=", "<": ">=", ">=": "<", "<=": ">", "==": "!="}[operator]
-    jmp = {"<": "JL", ">": "JG", "<=": "JLE", ">=": "JGE", "!=":"JNE"}[operator]
-    return i, code + f"{jmp} {label}\n"
+    operator = {">": "<=", "<": ">=", ">=": "<", "<=": ">", "==": "!=", "!=": "=="}[operator]
+    jmp = {"<": "JL", ">": "JG", "<=": "JLE", ">=": "JGE", "!=":"JNE", "==": "JE" }[operator]
+    return i, code + jump(jmp, label)
 
 
 def compile_declaration(tokens, i):
@@ -163,6 +171,9 @@ def compile_declaration(tokens, i):
 
 
 def compile_expression(tokens: List[str], i: int, target_type: str = "int"):
+    if tokens[i] == ":i8":
+        target_type = "i8"
+        i += 1
     i, code = compile_term(tokens, i, target_type)
     while tokens[i] in "+-":
         operator = tokens[i]
@@ -210,8 +221,17 @@ def compile_term(tokens, i, target_type):
 
 
 def compile_factor(tokens, i, target_type):
+    if tokens[i] == "[":
+        source = tokens[i + 1]
+        assert variables[source] == "i8[]"
+        i, index = compile_expression(tokens, i + 2)
+        assert tokens[i] == "]"
+        if target_type == "i8":
+            return i + 1, index + f"pop ax\nlea si, {source}\nadd si, ax\nmov al, [si]\npush al\n"
+        return i + 1, index + f"pop ax\nlea si, {source}\nadd si, ax\nmov ax, [si]\npush ax\n"
     if tokens[i] == "(":
         i, code = compile_expression(tokens, i + 1, target_type)
+        assert tokens[i] == ")"
         return i + 1, code
     if tokens[i].isdigit():
         literal = tokens[i]
