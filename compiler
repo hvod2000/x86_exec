@@ -11,19 +11,16 @@ from typing import List
 #     ...
 # def function()
 #     ...
-
+REGISTERS = {"ax", "bx", "al", "bl"}
 
 ids = 0
-
+types = {"int", "i8", "i8[]"}
+variables = {}
 
 def get_uid():
     global ids
     ids += 1
     return ids - 1
-
-
-types = {"int", "i8", "i8[]"}
-variables = {}
 
 
 def warnging(msg):
@@ -246,16 +243,19 @@ def optimize_assembly(assembly: str):
             x = line.removeprefix("pop ")
             y = lines.pop().removeprefix("push ")
             unprocessed_lines.append(f"mov {x}, {y}")
-        elif (
+            continue
+        if (
             line.startswith("mov")
             and lines[-1].startswith("mov")
             and line.endswith(lines[-1][4 : lines[-1].index(",")])
         ):
             x, y = line.removeprefix("mov ").split(", ")
-            y, z = lines.pop().removeprefix("mov ").split(", ")
-            unprocessed_lines.append(f"mov {x}, {z}")
-        else:
-            lines.append(line)
+            y, z = lines[-1].removeprefix("mov ").split(", ")
+            if y in REGISTERS and (z in REGISTERS or x in REGISTERS):
+                lines.pop()
+                unprocessed_lines.append(f"mov {x}, {z}")
+                continue
+        lines.append(line)
     return "\n".join(lines[1:])
 
 
@@ -283,13 +283,18 @@ def main():
 """
 
 source = """
-int x = 10
-i8 z = 0
-int big_z = 255
+i8 n = 4
+int sum = 0
+int a = 1
+int b = 0
+int c = 0
 
 def main()
-    while x ./ big_z < big_z
-        big_z -= 1
-    z = big_z
+    while n > 0 
+        c = a + b
+        sum = sum + c
+        a = b
+        b = c
+        n -= 1
 """
 print(prettify_assembly(align_stack(optimize_assembly(compile(source)))))
