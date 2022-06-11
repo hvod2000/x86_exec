@@ -4,6 +4,8 @@ from collections import namedtuple
 from itertools import zip_longest
 
 Type = namedtuple("Type", "sign elements byte_lvl")
+Type.__str__ = lambda typ: typ.sign + str(8*2**typ.byte_lvl) + f"[{typ.elements}]" * (typ.elements != 1)
+
 
 # type -- (signed/unsigned, number_of elements)
 
@@ -22,7 +24,7 @@ def unify_types(typ, *types):
 
 
 def classify_number(number):
-    sign = "s" if number < 0 or number.bit_length() % 8 else "u"
+    sign = "i" if number < 0 or number.bit_length() % 8 else "u"
     bits, byte_lvl = number.bit_length(), 0
     while 8 * 2**byte_lvl < bits:
         byte_lvl += 1
@@ -56,7 +58,7 @@ def derive_type(expression, scopes):
             x, y = (derive_type(v, scopes) for v in (x, y))
             match operation:
                 case "and" | "or":
-                    return Type("s", max(x.elements, y.elements), 0)
+                    return Type("i", max(x.elements, y.elements), 0)
                 case op:
                     return Type(*map(max, zip(x, y)))
         case UnaryOperation(_, _, argument):
