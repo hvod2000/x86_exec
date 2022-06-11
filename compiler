@@ -13,6 +13,7 @@ from typing import List
 #     ...
 LONG_JUMPS = True
 REGISTERS = {"ax", "bx", "al", "bl"}
+TOKENS = {"+", "*", "(", ")", "[", "]", "/", "./", "%", "*", "=", ">=", ">"} | {"<", "<=", "!=", "==", "-", "^"}
 
 ids = 0
 types = {"int", "i8", "i8[]"}
@@ -46,6 +47,7 @@ def tokenize(source: str):
     indents = [0]
     tokens = []
     for line in lines:
+        print(line)
         indent = 0
         while indent < len(line) and line[indent] in " \t":
             indent += 1
@@ -56,7 +58,21 @@ def tokenize(source: str):
             tokens.append("DEINDENT")
             indents.pop()
         assert indents[-1] == indent
-        tokens += [token for token in line[indent:].split(" ") if token]
+        line = line[indent:].strip()
+        while line:
+            best_token = ""
+            for token in TOKENS:
+                if line.startswith(token) and len(token) > len(best_token):
+                    best_token = token
+            if not best_token:
+                i = 0
+                while i < len(line) and line[i] in "qfuyzxkcwboheaidrtnsmjglpvQFUYZXKCWBOHEAIDRTNSMJGLPV1234567890":
+                    i += 1
+                best_token = line[:i]
+            tokens.append(best_token)
+            if not best_token:
+                error("Strange source: "+ line)
+            line = line[len(best_token):].strip()
     return tokens + ["END"]
 
 
