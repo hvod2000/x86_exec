@@ -5,7 +5,7 @@ from errors import *
 
 #LONG_JUMPS = False
 #REGISTERS = {"ax", "bx", "al", "bl"}
-OPERATORS = set("+-*/%()[]<>=") | {"<=", ">=", "!=", "=="}
+OPERATORS = set("+-*/%()[]<>=^") | {"<=", ">=", "!=", "=="}
 NAME_CHARS = set("qfuyzxkcwboheaidrtnsmjglpv0123456789")
 NAME_CHARS |= {char.upper() for char in NAME_CHARS}
 Token = namedtuple("Token", "pos literal")
@@ -22,6 +22,8 @@ def next_token(source, i=0):
         return i + 2, source[i:i+2]
     if source[i:i+1] in OPERATORS:
         return i + 1, source[i:i+1]
+    if source[i] not in NAME_CHARS:
+        return i, None
     j = i
     while j < len(source) and source[j] in NAME_CHARS:
         j += 1
@@ -42,6 +44,9 @@ def tokenize(source: str):
         i = 0
         while i < len(line):
             j, (i, literal) = i, next_token(line, i)
+            if literal is None:
+                pos = (line_no, indent + i)
+                raise DslSyntaxError(pos, "Unexpected symbol")
             tokens.append(Token((line_no, indent + j), literal))
             while i < len(line) and line[i] in " \t":
                 i += 1
@@ -80,12 +85,9 @@ def parse_assignment(tokens, i):
     return j, Assignment(tokens[i].pos, variables, expressions)
 
 def parse_variable(tokens, i):
-    print("parse var:", tokens[i-1:i+2])
     variable = tokens[i].literal
     if variable.isdigit() or not all(char in NAME_CHARS for char in variable):
         raise DslSyntaxError(tokens[i].pos, 'It does not look like variable name')
-    if tokens[i + 1].literal == "[":
-        return parse_indexing(tokens, i)
     variable = Variable(tokens[i].pos, variable)
     return i + 1, variable
 
@@ -146,23 +148,31 @@ def parse_exponent(tokens, i):
     return i, result
 
 def parse_unary(tokens, i):
-    print("unary", tokens[i-1:])
     if tokens[i].literal == "(":
         i, expr = parse_expression(tokens, i + 1)
         assert tokens[i].literal == ")"
         return i + 1, expr
     if tokens[i].literal.isdigit():
         return parse_number(tokens, i)
-    if tokens[i].literal == "[":
-        return parse_array(tokens, i)
-    return parse_variable(tokens, i)
+    return parse_indexing(tokens, i)
 
 def parse_number(tokens, i):
     return i + 1, Number(tokens[i].pos, tokens[i].literal)
 
 def parse_array(tokens, i):
     raise NotImplementedError()
+
 def parse_indexing(tokens, i):
-    raise NotImplementedError()
+    if tokens[i].literal == "[":
+        i, result = parse_array(tokens, i)
+    else:
+        i, result = parse_variable(tokens, i)
+    while tokens[i].literal == "[":
+        j, (i, index) = i, parse_expression(tokens, i + 1)
+        result = Indexing(tokens[j].pos, result, index)
+        assert tokens[i].literal == "]"
+        i +=1
+    return i, result
+
 def parse_while(tokens, i):
     raise NotImplementedError()

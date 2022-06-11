@@ -11,3 +11,5 @@ class DslSyntaxError(Exception):
         self.pos = pos
         self.msg = msg
         super().__init__(msg)
+    def __str__(self):
+        return super().__str__() +":"+ str(self.pos)

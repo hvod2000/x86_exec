@@ -3,14 +3,16 @@ from parser import *
 
 def ast2str(node):
     match node:
-        case (_, value):
+        case Number(_, value):
+            return str(value)
+        case Variable(_, value):
             return str(value)
         case BinaryOperation(_, op, x, y):
             return ast2str(x) + f" {op} " + ast2str(y)
         case UnaryOperation(_, op, x):
             return f" {op} " + ast2str(x)
         case Indexing(_, arr, index):
-            return f"{arr}[{index}]"
+            return ast2str(arr) + "[" + ast2str(index) + "]"
         case Assignment(pos=_, variables=vrbls, values=vals):
             vrbls = ", ".join(map(ast2str, vrbls))
             vals = ", ".join(map(ast2str, vals))
