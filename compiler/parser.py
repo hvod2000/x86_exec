@@ -99,6 +99,7 @@ def parse_assignment(tokens, i):
     while tokens[j].literal == ",":
         j, expr = parse_expression(tokens, j + 1)
         expressions.append(expr)
+    assert len(variables) == len(expressions)
     return j, Assignment(tokens[i].pos, variables, expressions)
 
 
