@@ -1,6 +1,7 @@
 from nodes import *
 from parser import *
 
+
 def ast2str(node):
     match node:
         case Number(_, value):
@@ -20,8 +21,8 @@ def ast2str(node):
         case Assignment(pos=_, variables=vrbls, values=vals):
             vrbls = ", ".join(map(ast2str, vrbls))
             vals = ", ".join(map(ast2str, vals))
-            return  f"{vrbls} = {vals}"
+            return f"{vrbls} = {vals}"
         case list(xs):
-            return  "\n".join(map(ast2str, xs))
+            return "\n".join(map(ast2str, xs))
         case unrecognized_shit:
             raise ValueError(f"{unrecognized_shit}?")

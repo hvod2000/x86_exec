@@ -3,14 +3,20 @@ from collections import namedtuple
 from nodes import *
 from errors import *
 
-#LONG_JUMPS = False
-#REGISTERS = {"ax", "bx", "al", "bl"}
+# LONG_JUMPS = False
+# REGISTERS = {"ax", "bx", "al", "bl"}
 OPERATORS = set("+-*/%()[]<>=^,") | {"<=", ">=", "!=", "=="}
 NAME_CHARS = set("qfuyzxkcwboheaidrtnsmjglpv0123456789")
 NAME_CHARS |= {char.upper() for char in NAME_CHARS}
 Token = namedtuple("Token", "pos literal")
 tokens_are_equal = Token.__eq__
-Token.__eq__ = lambda t, s: tokens_are_equal(t, s) if isinstance(s, Token) else t.literal == s if isinstance(s, str) else t.pos == s
+Token.__eq__ = (
+    lambda t, s: tokens_are_equal(t, s)
+    if isinstance(s, Token)
+    else t.literal == s
+    if isinstance(s, str)
+    else t.pos == s
+)
 
 
 def get_indent(line):
@@ -19,17 +25,19 @@ def get_indent(line):
         i += 1
     return i
 
+
 def next_token(source, i=0):
-    if source[i:i+2] in OPERATORS:
-        return i + 2, source[i:i+2]
-    if source[i:i+1] in OPERATORS:
-        return i + 1, source[i:i+1]
+    if source[i : i + 2] in OPERATORS:
+        return i + 2, source[i : i + 2]
+    if source[i : i + 1] in OPERATORS:
+        return i + 1, source[i : i + 1]
     if source[i] not in NAME_CHARS:
         return i, None
     j = i
     while j < len(source) and source[j] in NAME_CHARS:
         j += 1
     return j, source[i:j]
+
 
 def tokenize(source: str):
     indents, tokens = [0], []
@@ -56,8 +64,10 @@ def tokenize(source: str):
         tokens.append(Token((line_no + 1, 0), "DEINDENT"))
     return tokens + [Token(None, "END")]
 
+
 def parse(source, i=0):
     return parse_statements(tokenize(source), i)[1]
+
 
 def parse_statements(tokens, i):
     statements = []
@@ -66,10 +76,12 @@ def parse_statements(tokens, i):
         statements.append(statement)
     return i, statements
 
+
 def parse_statement(tokens, i):
     if tokens[i].literal == "while" and tokens[i + 1].literal not in ",=":
         return parse_while(tokens, i)
     return parse_assignment(tokens, i)
+
 
 def parse_assignment(tokens, i):
     i, variable = parse_variable(tokens, i)
@@ -86,15 +98,20 @@ def parse_assignment(tokens, i):
         expressions.append(expr)
     return j, Assignment(tokens[i].pos, variables, expressions)
 
+
 def parse_variable(tokens, i):
     variable = tokens[i].literal
     if variable.isdigit() or not all(char in NAME_CHARS for char in variable):
-        raise DslSyntaxError(tokens[i].pos, 'It does not look like variable name')
+        raise DslSyntaxError(
+            tokens[i].pos, "It does not look like variable name"
+        )
     variable = Variable(tokens[i].pos, variable)
     return i + 1, variable
 
+
 def parse_expression(tokens, i):
     return parse_dijunction(tokens, i)
+
 
 def parse_dijunction(tokens, i):
     i, result = parse_conjunction(tokens, i)
@@ -103,6 +120,7 @@ def parse_dijunction(tokens, i):
         result = BinaryOperation(tokens[j].pos, "or", result, conjunction)
     return i, result
 
+
 def parse_conjunction(tokens, i):
     i, result = parse_unary_boolean(tokens, i)
     while tokens[i].literal == "and":
@@ -110,11 +128,13 @@ def parse_conjunction(tokens, i):
         result = BinaryOperation(tokens[j].pos, "and", result, element)
     return i, result
 
+
 def parse_unary_boolean(tokens, i):
     if tokens[i].literal == "not":
         j, argument = parse_comparison(tokens, i + 1)
         return UnaryOperation(tokens[i].pos, "not", argument)
     return parse_comparison(tokens, i)
+
 
 def parse_comparison(tokens, i):
     i, result = parse_arithmetic(tokens, i)
@@ -122,7 +142,7 @@ def parse_comparison(tokens, i):
         return i, result
     j, right = parse_arithmetic(tokens, i + 1)
     return i, BinaryOperation(tokens[i].pos, tokens[i].liter, result, right)
-    
+
 
 def parse_arithmetic(tokens, i):
     if tokens[i].literal == "-":
@@ -132,15 +152,21 @@ def parse_arithmetic(tokens, i):
         i, result = parse_product(tokens, i)
     while tokens[i].literal in "+-":
         j, (i, right) = i, parse_product(tokens, i + 1)
-        result = BinaryOperation(tokens[j].pos, tokens[j].literal, result, right)
+        result = BinaryOperation(
+            tokens[j].pos, tokens[j].literal, result, right
+        )
     return i, result
+
 
 def parse_product(tokens, i):
     i, result = parse_exponent(tokens, i)
     while tokens[i].literal in {"*", "/", "%", "//"}:
         j, (i, right) = i, parse_exponent(tokens, i + 1)
-        result = BinaryOperation(tokens[j].pos, tokens[j].literal, result, right)
+        result = BinaryOperation(
+            tokens[j].pos, tokens[j].literal, result, right
+        )
     return i, result
+
 
 def parse_exponent(tokens, i):
     i, result = parse_unary(tokens, i)
@@ -148,6 +174,7 @@ def parse_exponent(tokens, i):
         j, (i, right) = i, parse_unary(tokens, i + 1)
         result = BinaryOperation(tokens[j].pos, "^", result, right)
     return i, result
+
 
 def parse_unary(tokens, i):
     if tokens[i].literal == "(":
@@ -160,8 +187,10 @@ def parse_unary(tokens, i):
         return parse_number(tokens, i)
     return parse_indexing(tokens, i)
 
+
 def parse_number(tokens, i):
     return i + 1, Number(tokens[i].pos, tokens[i].literal)
+
 
 def parse_array(tokens, i):
     assert tokens[i] == "["
@@ -175,6 +204,7 @@ def parse_array(tokens, i):
     assert tokens[j] == "]"
     return j + 1, Array(tokens[i].pos, elements)
 
+
 def parse_indexing(tokens, i):
     if tokens[i].literal == "[":
         i, result = parse_array(tokens, i)
@@ -184,8 +214,9 @@ def parse_indexing(tokens, i):
         j, (i, index) = i, parse_expression(tokens, i + 1)
         result = Indexing(tokens[j].pos, result, index)
         assert tokens[i].literal == "]"
-        i +=1
+        i += 1
     return i, result
+
 
 def parse_while(tokens, i):
     raise NotImplementedError()
