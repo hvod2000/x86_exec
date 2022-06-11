@@ -77,7 +77,7 @@ def parse_statements(tokens, i):
     while tokens[i] != Token(None, "END"):
         i, statement = parse_statement(tokens, i)
         statements.append(statement)
-    return i, statements
+    return i, tuple(statements)
 
 
 def parse_statement(tokens, i):
@@ -100,7 +100,7 @@ def parse_assignment(tokens, i):
         j, expr = parse_expression(tokens, j + 1)
         expressions.append(expr)
     assert len(variables) == len(expressions)
-    return j, Assignment(tokens[i].pos, variables, expressions)
+    return j, Assignment(tokens[i].pos, tuple(variables), tuple(expressions))
 
 
 def parse_variable(tokens, i):
@@ -216,7 +216,7 @@ def parse_array(tokens, i):
         j, element = parse_expression(tokens, j + 1)
         elements.append(element)
     assert tokens[j] == "]"
-    return j + 1, Array(tokens[i].pos, elements)
+    return j + 1, Array(tokens[i].pos, tuple(elements))
 
 
 def parse_indexing(tokens, i):

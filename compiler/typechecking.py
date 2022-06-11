@@ -53,7 +53,7 @@ def derive_type(expression, scopes):
                 case "and" | "or":
                     return Type("s", 1, 0)
                 case op:
-                    return Type(map(max, zip(x, y)))
+                    return Type(*map(max, zip(x, y)))
         case UnaryOperation(_, _, argument):
             return derive_type(argument, scopes)
         case TypeCast(_, _, typ):

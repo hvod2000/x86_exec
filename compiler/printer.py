@@ -26,7 +26,7 @@ def ast2str(node):
             vrbls = ", ".join(map(ast2str, vrbls))
             vals = ", ".join(map(ast2str, vals))
             return f"{vrbls} = {vals}"
-        case list(xs):
+        case tuple(xs):
             return "\n".join(map(ast2str, xs))
         case unrecognized_shit:
             raise ValueError(f"{unrecognized_shit}?")
