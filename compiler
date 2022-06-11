@@ -183,21 +183,25 @@ def compile_expression(tokens: List[str], i: int, target_type: str = "int"):
 
 def compile_term(tokens, i, target_type):
     i, code = compile_factor(tokens, i, target_type)
-    while tokens[i] in "*/":
+    while tokens[i] in {"*", "/", "./"}:
         operator = tokens[i]
         i, expr = compile_factor(tokens, i + 1, "int")
         code += expr
         if target_type == "int":
             if operator == "*":
                 code += "pop bx\npop ax\nimul bx\npush ax\n"
-            else:
+            elif operator == "/":
                 code += "pop bx\npop ax\ncwd\nidiv bx\npush ax\n"
+            else:
+                code += "pop bx\npop ax\nmov dx, 0\ndiv bx\npush ax\n"
         else:
             code += "pop al\ncbw\nmov bx, ax\n"
             if operator == "*":
                 code += "pop ax\nimul bx\npush al\n"
-            else:
+            elif operator == "/":
                 code += "pop ax\ncwd\nidiv bx\npush al\n"
+            else:
+                code += "pop ax\nmov dx, 0\ndiv bx\npush al\n"
     return i, code
 
 
@@ -281,9 +285,11 @@ def main():
 source = """
 int x = 10
 i8 z = 0
+int big_z = 255
 
 def main()
-    while x / ( z + 1 ) >= ( z + 1 )
-        z += 1
+    while x ./ big_z < big_z
+        big_z -= 1
+    z = big_z
 """
 print(prettify_assembly(align_stack(optimize_assembly(compile(source)))))
