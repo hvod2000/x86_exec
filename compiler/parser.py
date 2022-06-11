@@ -27,6 +27,8 @@ def get_indent(line):
 
 
 def next_token(source, i=0):
+    if source[i] == "'" and source[i + 2] == "'":
+        return i + 3, source[i : i + 3]
     if source[i : i + 2] in OPERATORS:
         return i + 2, source[i : i + 2]
     if source[i : i + 1] in OPERATORS:
@@ -183,9 +185,15 @@ def parse_unary(tokens, i):
         if isinstance(expr, UnaryOperation) and expr.operation == "(":
             return i + 1, expr
         return i + 1, UnaryOperation((j + i) // 2, "(", expr)
+    if "'" in tokens[i].literal:
+        return parse_byte(tokens, i)
     if tokens[i].literal.isdigit():
         return parse_number(tokens, i)
     return parse_indexing(tokens, i)
+
+
+def parse_byte(tokens, i):
+    return i + 1, Byte(tokens[i].pos, ord(tokens[i].literal[1]))
 
 
 def parse_number(tokens, i):

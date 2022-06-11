@@ -4,6 +4,8 @@ from parser import *
 
 def ast2str(node):
     match node:
+        case Byte(_, value):
+            return repr(chr(value))
         case Number(_, value):
             return str(value)
         case Variable(_, value):
