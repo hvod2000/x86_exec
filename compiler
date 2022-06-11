@@ -248,19 +248,24 @@ def optimize_assembly(assembly: str):
         line = unprocessed_lines.pop()
         if line.startswith("pop") and lines[-1].startswith("push"):
             x = line.removeprefix("pop ")
-            y = lines.pop().removeprefix("push ")
-            unprocessed_lines.append(f"mov {x}, {y}")
-            continue
+            y = lines[-1].removeprefix("push ")
+            if x[-1] == y[-1]:
+                lines.pop()
+                unprocessed_lines.append(f"mov {x}, {y}")
+                continue
         if (
             line.startswith("mov")
             and lines[-1].startswith("mov")
-            and line.endswith(lines[-1][4 : lines[-1].index(",")])
         ):
-            x, y = line.removeprefix("mov ").split(", ")
-            y, z = lines[-1].removeprefix("mov ").split(", ")
-            if y in REGISTERS and (z in REGISTERS or x in REGISTERS):
+            x, y1 = line.removeprefix("mov ").split(", ")
+            y2, z = lines[-1].removeprefix("mov ").split(", ")
+            if y1 == y2 and y1 in REGISTERS and (z in REGISTERS or x in REGISTERS):
                 lines.pop()
                 unprocessed_lines.append(f"mov {x}, {z}")
+                continue
+        if line.startswith("mov"):
+            x, y = line.removeprefix("mov ").split(", ")
+            if x == y:
                 continue
         lines.append(line)
     return "\n".join(lines[1:])
@@ -290,19 +295,5 @@ def main():
 """
 
 source = """
-i8 a = 6
-i8 b = 2
-int no = 1
-int gcd = 0
-
-def main()
-    while no < 256
-        if a % no == 0 and b % no == 0
-            gcd = no
-        no += 1
-    if a > b
-        no = a * b / gcd
-    else
-        no = gcd
 """
-print(prettify_assembly(align_stack(optimize_assembly(compile(source)))))
+print(prettify_assembly(optimize_assembly(align_stack(optimize_assembly(compile(source))))))
