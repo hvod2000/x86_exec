@@ -47,7 +47,6 @@ def tokenize(source: str):
     indents = [0]
     tokens = []
     for line in lines:
-        print(line)
         indent = 0
         while indent < len(line) and line[indent] in " \t":
             indent += 1
@@ -99,9 +98,11 @@ def compile_statement(tokens: List[str], i: int):
     if tokens[i] in types:
         return compile_declaration(tokens, i)
     elif tokens[i] == "def":
-        label = tokens[i + 1].split("(", 1)[0]
-        assert tokens[i + 2] == "INDENT"
-        i, body = compile_statements(tokens, i + 3)
+        label = tokens[i + 1]
+        assert tokens[i + 2] == "("
+        assert tokens[i + 3] == ")"
+        assert tokens[i + 4] == "INDENT"
+        i, body = compile_statements(tokens, i + 5)
         return i + 1, f"{label}:\n" + body + "ret\n"
     elif tokens[i] == "if":
         return compile_if(tokens, i)
