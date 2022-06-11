@@ -1,6 +1,7 @@
 from nodes import *
 from errors import DslSyntaxError
 from collections import namedtuple
+from itertools import zip_longest
 
 Type = namedtuple("Type", "sign elements byte_lvl")
 
@@ -30,6 +31,8 @@ def classify_number(number):
 
 def derive_type(expression, scopes):
     match expression:
+        case Object(_, typ):
+            return typ
         case Byte(_):
             return Type("u", 1, 0)
         case Number(_, number):
@@ -44,7 +47,7 @@ def derive_type(expression, scopes):
                     break
             else:
                 raise DslSyntaxError(pos, f"Undefined variable {variable}")
-            return scope[variable]
+            return scope[variable].type
         case Function(_):
             raise NotImplementedError()
         case Application(_):
@@ -53,7 +56,7 @@ def derive_type(expression, scopes):
             x, y = (derive_type(v, scopes) for v in (x, y))
             match operation:
                 case "and" | "or":
-                    return Type("s", 1, 0)
+                    return Type("s", max(x.elements, y.elements), 0)
                 case op:
                     return Type(*map(max, zip(x, y)))
         case UnaryOperation(_, _, argument):
@@ -61,19 +64,20 @@ def derive_type(expression, scopes):
         case TypeCast(_, _, typ):
             assert typ.name[0] in "iu"
             return Type(typ.name[0], 1, ilog((int(typ.name[1:]) + 7) // 8, 2))
-        case Indexing(_, array, _):
+        case Indexing(_, array, index):
             array = derive_type(array, scopes)
-            return Type(array.sign, 1, array.byte_lvl)
+            index = derive_type(index, scopes)
+            return Type(array.sign, index.elements, array.byte_lvl)
 
 
 def typecheck(programm, scopes=()):
     scope = {}
-    scopes += (scope,)
+    scopes = (scope,) + scopes
     for statement in programm:
         match statement:
             case Assignment(_, variables, values):
                 new_variables = {
-                    v: derive_type(e, scopes) for v, e in zip(variables, values)
+                    v.name: Object(0, derive_type(e, scopes)) for v, e in zip(variables, values)
                 }
                 scope.update(new_variables)
             case _:
