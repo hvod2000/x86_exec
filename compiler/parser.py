@@ -5,10 +5,12 @@ from errors import *
 
 #LONG_JUMPS = False
 #REGISTERS = {"ax", "bx", "al", "bl"}
-OPERATORS = set("+-*/%()[]<>=^") | {"<=", ">=", "!=", "=="}
+OPERATORS = set("+-*/%()[]<>=^,") | {"<=", ">=", "!=", "=="}
 NAME_CHARS = set("qfuyzxkcwboheaidrtnsmjglpv0123456789")
 NAME_CHARS |= {char.upper() for char in NAME_CHARS}
 Token = namedtuple("Token", "pos literal")
+tokens_are_equal = Token.__eq__
+Token.__eq__ = lambda t, s: tokens_are_equal(t, s) if isinstance(s, Token) else t.literal == s if isinstance(s, str) else t.pos == s
 
 
 def get_indent(line):
@@ -162,7 +164,16 @@ def parse_number(tokens, i):
     return i + 1, Number(tokens[i].pos, tokens[i].literal)
 
 def parse_array(tokens, i):
-    raise NotImplementedError()
+    assert tokens[i] == "["
+    if tokens[i + 1] == "]":
+        return i + 2, Array(tokens[i].pos, ())
+    j, element = parse_expression(tokens, i + 1)
+    elements = [element]
+    while tokens[j] == ",":
+        j, element = parse_expression(tokens, j + 1)
+        elements.append(element)
+    assert tokens[j] == "]"
+    return j + 1, Array(tokens[i].pos, elements)
 
 def parse_indexing(tokens, i):
     if tokens[i].literal == "[":

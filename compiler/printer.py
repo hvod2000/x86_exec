@@ -15,6 +15,8 @@ def ast2str(node):
             return f" {op} " + ast2str(x)
         case Indexing(_, arr, index):
             return ast2str(arr) + "[" + ast2str(index) + "]"
+        case Array(_, items):
+            return "[" + ", ".join(map(ast2str, items)) + "]"
         case Assignment(pos=_, variables=vrbls, values=vals):
             vrbls = ", ".join(map(ast2str, vrbls))
             vals = ", ".join(map(ast2str, vals))
