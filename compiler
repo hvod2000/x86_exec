@@ -88,11 +88,20 @@ def compile_statement(tokens: List[str], i: int):
     variable = tokens[i]
     if variable not in variables:
         error(f"variable {variable} is not defined")
-    assert tokens[i + 1] == "="
-    i, expr = compile_expression(tokens, i + 2, variables[variable])
-    if variables[variable] == "int":
-        return i, expr + f"pop ax\nmov {variable}, ax\n"
-    return i, expr + f"pop al\nmov {variable}, al\n"
+    if tokens[i + 1] == "=":
+        i, expr = compile_expression(tokens, i + 2, variables[variable])
+        if variables[variable] == "int":
+            return i, expr + f"pop ax\nmov {variable}, ax\n"
+        return i, expr + f"pop al\nmov {variable}, al\n"
+    elif tokens[i + 1] == "+=":
+        if tokens[i + 2] == "1":
+            return i + 3, f"inc {variable}\n"
+        return i + 3, f"add {variable}, {tokens[i+2]}\n"
+    elif tokens[i + 1] == "-=":
+        if tokens[i + 2] == "1":
+            return i + 3, f"dec {variable}\n"
+        return i + 3, f"sub {variable}, {tokens[i+2]}\n"
+    error(f"WTF is {tokens[i + 1]}?")
 
 
 def compile_if(tokens, i):
@@ -274,7 +283,7 @@ int x = 10
 i8 z = 0
 
 def main()
-    while ( z + 1 ) * ( z + 1 ) <= x
-        z = z + 1
+    while x / ( z + 1 ) >= ( z + 1 )
+        z += 1
 """
 print(prettify_assembly(align_stack(optimize_assembly(compile(source)))))
