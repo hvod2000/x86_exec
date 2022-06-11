@@ -19,7 +19,7 @@ def ilog(x, b=2):
 
 def unify_types(typ, *types):
     for t in types:
-        typ = Type(map(max, zip(typ, t)))
+        typ = Type(*map(max, zip(typ, t)))
     return typ
 
 
@@ -41,8 +41,8 @@ def derive_type(expression, scopes):
             return classify_number(int(number))
         case Array(_, items):
             typ = unify_types(*(derive_type(item, scopes) for item in items))
-            assert typ.elements != 1, "I don't support arrays of arrays"
-            return Type(typ.sign, len(items), typ.bits)
+            assert typ.elements == 1, "I don't support arrays of arrays"
+            return Type(typ.sign, len(items), typ.byte_lvl)
         case Variable(pos, variable):
             for scope in scopes:
                 if variable in scope:
