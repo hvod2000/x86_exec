@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-Char = namedtuple("Char", "pos value")
+Byte = namedtuple("Byte", "pos value")
 Array = namedtuple("Array", "pos items")
 Number = namedtuple("Number", "pos value")
 Variable = namedtuple("Variable", "pos name")

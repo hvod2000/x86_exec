@@ -20,6 +20,8 @@ def ast2str(node):
             return ast2str(arr) + "[" + ast2str(index) + "]"
         case Array(_, items):
             return "[" + ", ".join(map(ast2str, items)) + "]"
+        case TypeCast(_, expr, typ):
+            return ast2str(expr) + " : " + ast2str(typ)
         case Assignment(pos=_, variables=vrbls, values=vals):
             vrbls = ", ".join(map(ast2str, vrbls))
             vals = ", ".join(map(ast2str, vals))

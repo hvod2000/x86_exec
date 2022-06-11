@@ -5,11 +5,12 @@ from errors import *
 
 # LONG_JUMPS = False
 # REGISTERS = {"ax", "bx", "al", "bl"}
-OPERATORS = set("+-*/%()[]<>=^,") | {"<=", ">=", "!=", "=="}
-NAME_CHARS = set("qfuyzxkcwboheaidrtnsmjglpv0123456789")
+OPERATORS = set("+-*/%()[]<>=^,:") | {"<=", ">=", "!=", "=="}
+NAME_CHARS = set("qfuyzxkcwboheaidrtnsmjglpv0123456789_")
 NAME_CHARS |= {char.upper() for char in NAME_CHARS}
 Token = namedtuple("Token", "pos literal")
 tokens_are_equal = Token.__eq__
+Token.__ne__ = lambda t1, t2: not (t1 == t2)
 Token.__eq__ = (
     lambda t, s: tokens_are_equal(t, s)
     if isinstance(s, Token)
@@ -112,7 +113,11 @@ def parse_variable(tokens, i):
 
 
 def parse_expression(tokens, i):
-    return parse_dijunction(tokens, i)
+    i, expr = parse_dijunction(tokens, i)
+    if tokens[i] != ":":
+        return i, expr
+    j, typ = parse_variable(tokens, i + 1)
+    return j, TypeCast(tokens[i].pos, expr, typ)
 
 
 def parse_dijunction(tokens, i):
