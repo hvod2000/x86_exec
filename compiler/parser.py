@@ -149,9 +149,11 @@ def parse_exponent(tokens, i):
 
 def parse_unary(tokens, i):
     if tokens[i].literal == "(":
-        i, expr = parse_expression(tokens, i + 1)
+        j, (i, expr) = i, parse_expression(tokens, i + 1)
         assert tokens[i].literal == ")"
-        return i + 1, expr
+        if isinstance(expr, UnaryOperation) and expr.operation == "(":
+            return i + 1, expr
+        return i + 1, UnaryOperation((j + i) // 2, "(", expr)
     if tokens[i].literal.isdigit():
         return parse_number(tokens, i)
     return parse_indexing(tokens, i)

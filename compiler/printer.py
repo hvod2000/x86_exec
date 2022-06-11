@@ -9,6 +9,8 @@ def ast2str(node):
             return str(value)
         case BinaryOperation(_, op, x, y):
             return ast2str(x) + f" {op} " + ast2str(y)
+        case UnaryOperation(_, "(", x):
+            return "(" + ast2str(x) + ")"
         case UnaryOperation(_, op, x):
             return f" {op} " + ast2str(x)
         case Indexing(_, arr, index):
