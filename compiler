@@ -63,9 +63,9 @@ def compile(source: str, target: str = "WINTER"):
     code = compile_statements(tokenize(source), 0)[1]
     if code.find("main:") != -1:
         if target == "WINTER":
-            code = f"jmp main\n{code}halt:\njmp halt ;$E\n"
+            code = f"call main\njmp halt\n{code}halt:\njmp halt ;$E\n"
         else:
-            code = f"jmp main\n{code}hlt\n"
+            code = f"call main\nhlt\n{code}"
     return code
 
 
@@ -85,11 +85,13 @@ def compile_statement(tokens: List[str], i: int):
         label = tokens[i + 1].split("(", 1)[0]
         assert tokens[i + 2] == "INDENT"
         i, body = compile_statements(tokens, i + 3)
-        return i + 1, f"{label}:\n" + body
+        return i + 1, f"{label}:\n" + body + "ret\n"
     elif tokens[i] == "if":
         return compile_if(tokens, i)
     elif tokens[i] == "while":
         return compile_while(tokens, i)
+    elif tokens[i] == "call":
+        return compile_call(tokens, i)
     variable = tokens[i]
     if variable not in variables:
         error(f"variable {variable} is not defined")
@@ -126,6 +128,11 @@ def compile_if(tokens, i):
     code = f"{condition}{then_branch}jmp {label}_end\n"
     code += f"{label}_else:\n{label}_end:\n"
     return i + 1, code
+
+def compile_call(tokens, i):
+    assert tokens[i] == "call"
+    f = tokens[i + 1]
+    return i + 2, f"call {f}\n"
 
 def compile_while(tokens, i):
     assert tokens[i] == "while"
@@ -301,17 +308,23 @@ def prettify_assembly(assembly: str):
 
 
 source = """
-int a = 8
-int b = 3
-i8 c = 5
-i8 d = -2
-int RES = 0
+int a = 1234
+int res = 0
+i8 char = 0
 
-def main():
-    if a * d >= 0
-        RES = b - ( c + a / d ) * b
-    else
-        RES = a / b + c - d * a
+def check_digit()
+    if char % 2 == 1
+        res = res * 10 + char
+
+def main()
+    char = a / 1000
+    call check_digit
+    char = a / 100 % 10
+    call check_digit
+    char = a / 10 % 10
+    call check_digit
+    char = a % 10
+    call check_digit
 """
 
 source = """
