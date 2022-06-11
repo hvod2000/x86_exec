@@ -207,6 +207,9 @@ def compile_declaration(tokens, i):
         warnging(f"{variable} is already defined")
     assert tokens[i + 2] == "="
     value = tokens[i + 3]
+    if tokens[i + 3] == "-":
+        i += 1
+        value = "-" + tokens[i + 3]
     variables[variable] = var_type
     typ = {"int": "dw", "i8": "db", "i8[]": "db"}[var_type]
     return i + 4, f"{variable} {typ} {value}\n"
