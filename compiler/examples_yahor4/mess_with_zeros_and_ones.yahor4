@@ -1,0 +1,9 @@
+in_str : i8[80]
+out_str : i8[80]
+i, j, one = 0, 0, 1
+while in_str[i] != '#'
+	out_str[j] = in_str[i]
+	out_str[j+1] = 48 + one
+	one = 1 - one
+	j = j + 2
+	i = i + 1

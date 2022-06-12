@@ -1,0 +1,13 @@
+in1 : i8[80]
+#in2 : i8[80]
+out1: i8[80]
+i = 0
+while in1[i] != '*'
+	if in1[i] >= 'a' and in1[i] <= 'z'
+		out1[i] = in1[i] + 'A' - 'a'
+	else
+		if in1[i] >= 'A' and in1[i] <= 'Z'
+			out1[i] = in1[i] + 'a' - 'A'
+		else
+			out1[i] = in1[i]
+	i = i + 1

@@ -1,0 +1,9 @@
+in1 : i8[80]
+#in2 : i8[80]
+out1: i8[80]
+i = 0
+while in1[i] != '*'
+	out1[i] = '9'
+	if in1[i] == 'A'
+		out1[i] = 'A'
+	i = i + 1

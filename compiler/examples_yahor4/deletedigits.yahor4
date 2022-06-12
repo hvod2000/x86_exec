@@ -1,0 +1,10 @@
+in1 : i8[20]
+out1 : i8[20]
+i, j = 0, 0
+while in1[i] != '#'
+	if in1[i] != '0' and in1[i] != '1' and in1[i] != '2' and in1[i] != '3' and in1[i] != '4'
+	and in1[i] != '5' and in1[i] != '6' and in1[i] != '7' and in1[i] != '8' and in1[i] != '9'
+		out1[j] = in1[i]
+		j = j + 1
+	i = i + 1
+out1[j] = in1[i]

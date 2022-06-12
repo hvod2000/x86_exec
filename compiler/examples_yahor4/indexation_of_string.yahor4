@@ -1,0 +1,8 @@
+in1 : i8[80]
+in2 : i8[80]
+output : i8[80]
+i = 0
+while in2[i] != '#'
+	output[i] = in1[in2[i] - 49]
+	i = i + 1
+output[i] = '#'

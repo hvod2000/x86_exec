@@ -1,0 +1,19 @@
+in1 : i8[80]
+out1 : i8[80]
+i, j = 0, 0
+while in1[i] != '*'
+	found, k = 0, 0
+	while k < i
+		if in1[i] == in1[k]
+			found = 1
+		k = k + 1
+	if found == 0
+		counter, k = 0, 0
+		while in1[k] != '*'
+			if in1[k] == in1[i]
+				counter = counter + 1
+			k = k + 1
+		out1[j] = in1[i]
+		out1[j + 1] = counter + 48
+		j = j + 2
+	i = i + 1

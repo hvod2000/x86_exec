@@ -1,0 +1,17 @@
+in1 : i8[80]
+#in2 : i8[80]
+out1: i8[80]
+i = 0
+while in1[i] != '*'
+	i = i + 1
+if i % 2 == 0 or i < 2
+	out1[0] = '0'
+else
+	j = 0
+	while j < i / 2
+		out1[j] = in1[j]
+		j = j + 1
+	j = i / 2 + 1
+	while j < i
+		out1[j - 1] = in1[j]
+		j = j + 1

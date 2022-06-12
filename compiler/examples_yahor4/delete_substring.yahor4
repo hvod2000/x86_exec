@@ -1,0 +1,17 @@
+in1 : i8[80]
+in2 : i8[80]
+out1: i8[80]
+i, j = 0, 0
+while in1[i] != '*'
+	k, is_substring = 0, 1
+	while in2[k] != '*'
+		if in1[i + k] != in2[k]
+			is_substring = 0
+		k = k + 1
+	if is_substring
+		i = i + k
+	else
+		out1[j] = in1[i]
+		j, i = j + 1, i + 1
+if j == 0
+	out1[j] = '0'

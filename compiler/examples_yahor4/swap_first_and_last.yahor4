@@ -1,0 +1,8 @@
+in_str : i8[80]
+out_str : i8[80]
+i = 0
+while in_str[i] != '#'
+	out_str[i] = in_str[i]
+	i = i + 1
+out_str[0] = in_str[i - 1]
+out_str[i - 1] = in_str[0]

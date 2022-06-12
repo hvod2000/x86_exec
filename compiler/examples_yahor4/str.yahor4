@@ -1,0 +1,15 @@
+strin : i8[6]
+#strin = ['A', 'B', 'C', 'A', 'E', '$']
+strout : i8[6]
+i = 0
+while strin[i] != '$'
+	strout[i] = strin[i]
+	j = 0
+	counter = 0
+	while j < i
+		counter = counter + (strin[j] == strin[i])
+		j = j + 1
+	if counter > 0
+		strout[i] = 48 + counter
+	i = i + 1
+strout[i] = strin[i]

@@ -1,0 +1,10 @@
+in1 : i8[80]
+in2 : i8[80]
+output : i8[80]
+i, j = 0, 0
+while in1[i] != '#' and in2[i] != '#'
+	if in1[i] == in2[i]
+		output[j] = in1[i]
+		j = j + 1
+	i = i + 1
+output[j] = '#'
