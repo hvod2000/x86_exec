@@ -87,8 +87,8 @@ def evaluate(expression, scopes):
 def execute(statement, scopes):
     match statement:
         case Assignment(_, variables, values):
+            values = [get_value(evaluate(value, scopes)) for value in values]
             for target, value in zip(variables, values):
-                value = get_value(evaluate(value, scopes))
                 var = target.name if isinstance(target, Variable) else target.array.name
                 scope = next(scope for scope in scopes if var in scope)
                 if isinstance(target, Variable):
