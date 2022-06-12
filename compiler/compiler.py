@@ -141,10 +141,32 @@ def compile_expression(expression, scopes):
                     raise NotImplementedError()
                     xy = zip_longest(x, y, fillvalue=1)
                     return gen_obj([x * y for x, y in xy], typ)
-                case "/":
+                case "%":
+                    xy = (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ))
+                    if typ.sign == 'u':
+                        if typ.byte_lvl == 0:
+                            return xy + "pop ax\npop bx\nmov ah, 0\ndiv bl\nmov al, ah\npush ax\n"
+                        if typ.byte_lvl == 1:
+                            return xy + "pop ax\npop bx\nmov dx, 0\ndiv bx\npush dx\n"
+                    else:
+                        if typ.byte_lvl == 0:
+                            return xy + "pop ax\npop bx\ncbw\nidiv bl\nmov al, ah\npush ax\n"
+                        if typ.byte_lvl == 1:
+                            return xy + "pop ax\npop bx\ncwd\nidiv bx\npush dx\n"
                     raise NotImplementedError()
-                    xy = zip_longest(x, y, fillvalue=1)
-                    return gen_obj([x // y for x, y in xy], typ)
+                case "/":
+                    xy = (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ))
+                    if typ.sign == 'u':
+                        if typ.byte_lvl == 0:
+                            return xy + "pop ax\npop bx\nmov ah, 0\ndiv bl\npush ax\n"
+                        if typ.byte_lvl == 1:
+                            return xy + "pop ax\npop bx\nmov dx, 0\ndiv bx\npush ax\n"
+                    else:
+                        if typ.byte_lvl == 0:
+                            return xy + "pop ax\npop bx\ncbw\nidiv bl\npush ax\n"
+                        if typ.byte_lvl == 1:
+                            return xy + "pop ax\npop bx\ncwd\nidiv bx\npush ax\n"
+                    raise NotImplementedError()
                 case cmp if cmp in {">", ">=", "<", "<=", "!=", "=="}:
                     typ = unify_types(x_type, y_type)
                     return (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ)) + compile_compare(typ, cmp)
