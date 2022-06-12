@@ -69,6 +69,9 @@ def evaluate(expression, scopes):
                 case "<":
                     xy = zip_longest(x, y, fillvalue=0)
                     return gen_obj([x < y for x, y in xy], typ)
+                case "!=":
+                    xy = zip_longest(x, y, fillvalue=0)
+                    return gen_obj([x != y for x, y in xy], typ)
                 case op:
                     raise Exception(f"unsupported operation: {op}")
         case UnaryOperation(_, operation, argument):

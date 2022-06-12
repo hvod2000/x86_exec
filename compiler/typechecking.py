@@ -85,12 +85,19 @@ def typecheck(programm, scopes=(), scope=None):
         match statement:
             case Assignment(_, variables, expressions):
                 new_types = {}
-                for var, expr in zip(variables, expressions):
-                    var = var.name if isinstance(var, Variable) else var.array.name
-                    new_types[var] = derive_type(expr, scopes)
-                for var, typ in new_types.items():
-                    value = scope[var].value if var in scope else (0,) * typ.elements
-                    scope[var] = Object(value, typ)
+                for target, expr in zip(variables, expressions):
+                    var = target.name if isinstance(target, Variable) else target.array.name
+                    new_types[target] = derive_type(expr, scopes)
+                for target, typ in new_types.items():
+                    if isinstance(target, Variable):
+                        var = target.name
+                        value = scope[var].value if var in scope else (0,) * typ.elements
+                        scope[var] = Object(value, typ)
+                    else:
+                        var = target.array.name
+                        typ = unify_types(scope[var].type, typ)
+                        value = scope[var].value if var in scope else (0,) * typ.elements
+                        scope[var] = Object(value, typ)
             case IfBlock(_, condition, body):
                 derive_type(condition, scopes)
                 typecheck(body, scopes[1:], scope)
