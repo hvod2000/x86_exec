@@ -65,17 +65,20 @@ def derive_type(expression, scopes):
             return derive_type(argument, scopes)
         case TypeCast(_, expr, typ):
             derive_type(expr, scopes)
+            return str2type(typ)
+        case Indexing(_, array, index):
+            array = derive_type(array, scopes)
+            index = derive_type(index, scopes)
+            return Type(array.sign, index.elements, array.byte_lvl)
+
+
+def str2type(typ):
             var = typ.name if isinstance(typ, Variable) else typ.array.name
             assert var[0] in "iu"
             sign = var[0]
             byte_lvl = ilog((int(var[1:]) + 7) // 8, 2)
             elements = int(typ.index.value) if isinstance(typ, Indexing) else 1
             return Type(sign, elements, byte_lvl)
-        case Indexing(_, array, index):
-            array = derive_type(array, scopes)
-            index = derive_type(index, scopes)
-            return Type(array.sign, index.elements, array.byte_lvl)
-
 
 def typecheck(programm, scopes=(), scope=None):
     if scope is None:
@@ -98,6 +101,12 @@ def typecheck(programm, scopes=(), scope=None):
                         typ = unify_types(scope[var].type, typ)
                         value = scope[var].value if var in scope else (0,) * typ.elements
                         scope[var] = Object(value, typ)
+            case Declaration(_, var, typ):
+                var = var.name
+                typ = str2type(typ)
+                assert var not in scope
+                value = (0,) * typ.elements
+                scope[var] = Object(value, typ)
             case IfBlock(_, condition, body):
                 derive_type(condition, scopes)
                 typecheck(body, scopes[1:], scope)

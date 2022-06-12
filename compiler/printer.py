@@ -28,6 +28,8 @@ def ast2str(node):
         case WhileLoop(_, condition, body):
             body = ("    " + line for line in ast2str(body).split("\n"))
             return "while " + ast2str(condition) + "\n" + "\n".join(body)
+        case Declaration(_, var, typ):
+            return ast2str(var) + " : " + ast2str(typ)
         case Assignment(pos=_, variables=vrbls, values=vals):
             vrbls = ", ".join(map(ast2str, vrbls))
             vals = ", ".join(map(ast2str, vals))

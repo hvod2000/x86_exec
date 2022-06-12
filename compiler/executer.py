@@ -107,6 +107,8 @@ def execute(statement, scopes):
                     for index in indexes:
                         array[index] = value
                     scope[var] = gen_obj(array, scope[var].type)
+        case Declaration(_, _, _):
+            pass
         case IfBlock(_, condition, body):
             if any(get_value(evaluate(condition, scopes))):
                 execute(body, scopes)

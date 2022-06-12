@@ -88,6 +88,10 @@ def parse_statement(tokens, i):
         return parse_while(tokens, i)
     if tokens[i] == "if" and tokens[i + 1].literal not in ",=":
         return parse_ifblock(tokens, i)
+    if tokens[i + 1] == ":":
+        _, var = parse_variable(tokens, i)
+        j, typ = parse_indexing(tokens, i + 2)
+        return j, Declaration(tokens[i + 1].pos, var, typ)
     return parse_assignment(tokens, i)
 
 def parse_ifblock(tokens, i):

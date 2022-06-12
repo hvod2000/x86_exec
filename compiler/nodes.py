@@ -12,6 +12,7 @@ Application = namedtuple("Application", "pos function arguments")
 TypeCast = namedtuple("TypeCast", "pos argument type")
 Indexing = namedtuple("Indexing", "pos array index")
 
+Declaration = namedtuple("Declaration", "pos variable type")
 Assignment = namedtuple("Aassignment", "pos variables values")
 WhileLoop = namedtuple("WhileLoop", "pos condition body")
 IfBlock = namedtuple("IfBlock", "pos condition body")
