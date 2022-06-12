@@ -4,7 +4,7 @@ from collections import namedtuple
 from itertools import zip_longest
 
 Type = namedtuple("Type", "sign elements byte_lvl")
-Type.__str__ = lambda typ: typ.sign + str(8*2**typ.byte_lvl) + f"[{typ.elements}]" * (typ.elements != 1)
+Type.__str__ = lambda typ: typ.sign + str(8 * 2**typ.byte_lvl) + f"[{typ.elements}]" * (typ.elements != 1)
 
 
 # type -- (signed/unsigned, number_of elements)
@@ -73,12 +73,13 @@ def derive_type(expression, scopes):
 
 
 def str2type(typ):
-            var = typ.name if isinstance(typ, Variable) else typ.array.name
-            assert var[0] in "iu"
-            sign = var[0]
-            byte_lvl = ilog((int(var[1:]) + 7) // 8, 2)
-            elements = int(typ.index.value) if isinstance(typ, Indexing) else 1
-            return Type(sign, elements, byte_lvl)
+    var = typ.name if isinstance(typ, Variable) else typ.array.name
+    assert var[0] in "iu"
+    sign = var[0]
+    byte_lvl = ilog((int(var[1:]) + 7) // 8, 2)
+    elements = int(typ.index.value) if isinstance(typ, Indexing) else 1
+    return Type(sign, elements, byte_lvl)
+
 
 def typecheck(programm, scopes=(), scope=None):
     if scope is None:

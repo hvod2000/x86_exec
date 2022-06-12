@@ -4,17 +4,20 @@ from itertools import zip_longest
 
 LOGICAL = {"and", "or", "not"}
 
+
 def get_value(obj: Object):
     base = 256 ** (2**obj.type.byte_lvl)
     if obj.type.sign == "u":
         values = [v % base for v in obj.value]
     values = [(v + base // 2) % base - base // 2 for v in obj.value]
     if obj.type.elements <= len(values):
-        return tuple(values[:obj.type.elements])
+        return tuple(values[: obj.type.elements])
     return tuple(values + [0] * (obj.type.elements - len(values)))
+
 
 def gen_obj(it, typ):
     return Object(get_value(Object(it, typ)), typ)
+
 
 def evaluate(expression, scopes):
     typ = derive_type(expression, scopes)
@@ -33,9 +36,9 @@ def evaluate(expression, scopes):
         case BinaryOperation(pos, operation, x, y) if operation in LOGICAL:
             x = get_value(evaluate(x, scopes))
             if all(x) and operation == "or":
-                return Object((1,)*typ.elements , typ)
+                return Object((1,) * typ.elements, typ)
             if not any(x) and operation == "and":
-                return Object((0,)*typ.elements, typ)
+                return Object((0,) * typ.elements, typ)
             y = get_value(evaluate(y, scopes))
             if operation == "or":
                 xy = zip_longest(x, y, fillvalue=0)
@@ -92,6 +95,7 @@ def evaluate(expression, scopes):
             array = get_value(evaluate(array, scopes))
             index = get_value(evaluate(index, scopes))
             return gen_obj([array[i] for i in index], typ)
+
 
 def execute(statement, scopes):
     match statement:

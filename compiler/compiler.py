@@ -39,6 +39,7 @@ def compile_get(var, typ):
         return f"lea si, {var}\nmov ax, [si]\nadd si, 2\n" + "mov dx, [si]\npush dx\npush ax"
     raise NotImplementedError()
 
+
 def compile_compare(typ, operation):
     assert typ.elements == 1
     label = "l" + get_uid()
@@ -68,6 +69,7 @@ def compile_compare(typ, operation):
             case "<=", "u":
                 return cmp + f"jbe {label}_true\n" + end
     raise NotImplementedError
+
 
 def compile_expression(expression, scopes):
     typ = derive_type(expression, scopes)
@@ -104,7 +106,7 @@ def compile_expression(expression, scopes):
             match operation:
                 case "+":
                     assert typ.elements == 1
-                    xy = ( (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ)))
+                    xy = (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ))
                     if typ.byte_lvl == 0:
                         return xy + "pop ax\npop bx\nadd al, bl\npush ax\n"
                     if typ.byte_lvl == 1:
@@ -124,7 +126,7 @@ def compile_expression(expression, scopes):
                     return gen_obj([x // y for x, y in xy], typ)
                 case cmp if cmp in {">", ">=", "<", "<=", "!=", "=="}:
                     typ = unify_types(x_type, y_type)
-                    return ( (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ)) + compile_compare(typ, cmp))
+                    return (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ)) + compile_compare(typ, cmp)
                 case op:
                     raise Exception(f"unsupported operation: {op}")
         case UnaryOperation(_, operation, argument):
@@ -217,12 +219,13 @@ def compile_cast(typ1, typ2):
         return ""
     if typ1.byte_lvl < typ2.byte_lvl:
         return {
-                ("s", 0, 1) : "pop ax\ncbw\npush ax\n",
-                ("u", 0, 1) : "pop ax\nmov ah, 0\npush ax\n",
-                ("s", 1, 2) : "pop ax\ncwd\npush dx\npush ax\n",
-                ("u", 1, 2) : "pop ax\nmov dx, 0\npush dx\npush ax\n",
-                }[typ1.sign, typ1.byte_lvl, typ2.byte_lvl]
+            ("s", 0, 1): "pop ax\ncbw\npush ax\n",
+            ("u", 0, 1): "pop ax\nmov ah, 0\npush ax\n",
+            ("s", 1, 2): "pop ax\ncwd\npush dx\npush ax\n",
+            ("u", 1, 2): "pop ax\nmov dx, 0\npush dx\npush ax\n",
+        }[typ1.sign, typ1.byte_lvl, typ2.byte_lvl]
     raise NotImplementedError()
+
 
 def compile_var_name(variable):
     return "".join(char if char == char.lower() else "big_" + char.lower() for char in variable)
@@ -254,6 +257,7 @@ def prettify_assembly(assembly: str):
         lines.append(line)
     return "\n".join(lines)
 
+
 def optimize_assembly(assembly: str):
     lines = ["START"]
     unprocessed_lines = list(reversed(assembly.split("\n")))
@@ -269,11 +273,7 @@ def optimize_assembly(assembly: str):
         if line.startswith("mov") and lines[-1].startswith("mov"):
             x, y1 = line.removeprefix("mov ").split(", ")
             y2, z = lines[-1].removeprefix("mov ").split(", ")
-            if (
-                y1 == y2
-                and y1 in REGISTERS
-                and (z in REGISTERS or x in REGISTERS)
-            ):
+            if y1 == y2 and y1 in REGISTERS and (z in REGISTERS or x in REGISTERS):
                 lines.pop()
                 unprocessed_lines.append(f"mov {x}, {z}")
                 continue
@@ -287,7 +287,9 @@ def optimize_assembly(assembly: str):
 
 def compile(program, optimize=True):
     scope = typecheck(program)
-    code = "jmp begin\n" + compile_scope(scope) + "begin:\n" + compile_statements(program, (scope,)) + "halt:jmp halt;$E\n"
+    code = (
+        "jmp begin\n" + compile_scope(scope) + "begin:\n" + compile_statements(program, (scope,)) + "halt:jmp halt;$E\n"
+    )
     if optimize:
         code = optimize_assembly(code)
     return prettify_assembly(code)

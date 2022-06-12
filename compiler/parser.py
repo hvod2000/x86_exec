@@ -94,6 +94,7 @@ def parse_statement(tokens, i):
         return j, Declaration(tokens[i + 1].pos, var, typ)
     return parse_assignment(tokens, i)
 
+
 def parse_ifblock(tokens, i):
     assert tokens[i] == "if"
     j, condition = parse_expression(tokens, i + 1)
@@ -103,6 +104,7 @@ def parse_ifblock(tokens, i):
     j, body = parse_statements(tokens, j + 1)
     assert tokens[j] == "DEINDENT"
     return j + 1, IfBlock(tokens[i].pos, condition, body)
+
 
 def parse_assignment(tokens, i):
     i, variable = parse_indexing(tokens, i)
@@ -124,9 +126,7 @@ def parse_assignment(tokens, i):
 def parse_variable(tokens, i):
     variable = tokens[i].literal
     if variable.isdigit() or not all(char in NAME_CHARS for char in variable):
-        raise DslSyntaxError(
-            tokens[i].pos, "It does not look like variable name"
-        )
+        raise DslSyntaxError(tokens[i].pos, "It does not look like variable name")
     variable = Variable(tokens[i].pos, variable)
     return i + 1, variable
 
@@ -178,9 +178,7 @@ def parse_arithmetic(tokens, i):
         i, result = parse_product(tokens, i)
     while tokens[i].literal in "+-":
         j, (i, right) = i, parse_product(tokens, i + 1)
-        result = BinaryOperation(
-            tokens[j].pos, tokens[j].literal, result, right
-        )
+        result = BinaryOperation(tokens[j].pos, tokens[j].literal, result, right)
     return i, result
 
 
@@ -188,9 +186,7 @@ def parse_product(tokens, i):
     i, result = parse_exponent(tokens, i)
     while tokens[i].literal in {"*", "/", "%", "//"}:
         j, (i, right) = i, parse_exponent(tokens, i + 1)
-        result = BinaryOperation(
-            tokens[j].pos, tokens[j].literal, result, right
-        )
+        result = BinaryOperation(tokens[j].pos, tokens[j].literal, result, right)
     return i, result
 
 
@@ -259,4 +255,3 @@ def parse_while(tokens, i):
     j, body = parse_statements(tokens, j + 1)
     assert tokens[j] == "DEINDENT"
     return j + 1, WhileLoop(tokens[i].pos, condition, body)
-
