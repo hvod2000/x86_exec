@@ -34,6 +34,8 @@ def next_token(source, i=0):
         return i + 2, source[i : i + 2]
     if source[i : i + 1] in OPERATORS:
         return i + 1, source[i : i + 1]
+    if source[i] == "#":
+        return len(source), "#"
     if source[i] not in NAME_CHARS:
         return i, None
     j = i
@@ -45,8 +47,7 @@ def next_token(source, i=0):
 def tokenize(source: str):
     indents, tokens = [0], []
     for line_no, line in enumerate(source.split("\n")):
-        indent = get_indent(line)
-        line = (line.split("#", 1)[0] if "#" in line else line).strip()
+        indent, line = get_indent(line), line.strip()
         if indent > indents[-1]:
             indents.append(indent)
             tokens.append(Token((line_no, indent // 2), "INDENT"))
@@ -60,6 +61,8 @@ def tokenize(source: str):
             if literal is None:
                 pos = (line_no, indent + i)
                 raise DslSyntaxError(pos, "Unexpected symbol")
+            if literal == "#":
+                break
             tokens.append(Token((line_no, indent + j), literal))
             while i < len(line) and line[i] in " \t":
                 i += 1
