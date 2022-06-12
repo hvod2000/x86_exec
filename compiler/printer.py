@@ -26,6 +26,9 @@ def ast2str(node):
             vrbls = ", ".join(map(ast2str, vrbls))
             vals = ", ".join(map(ast2str, vals))
             return f"{vrbls} = {vals}"
+        case IfBlock(_, condition, body):
+            body = ("    " + line for line in ast2str(body).split("\n"))
+            return "if " + ast2str(condition) + "\n" + "\n".join(body)
         case tuple(xs):
             return "\n".join(map(ast2str, xs))
         case unrecognized_shit:

@@ -54,6 +54,9 @@ def evaluate(expression, scopes):
                 case "/":
                     xy = zip_longest(x, y, fillvalue=1)
                     return gen_obj([x // y for x, y in xy], typ)
+                case ">":
+                    xy = zip_longest(x, y, fillvalue=0)
+                    return gen_obj([x > y for x, y in xy], typ)
                 case op:
                     raise Exception(f"unsupported operation: {op}")
         case UnaryOperation(_, operation, argument):
@@ -79,6 +82,9 @@ def execute(statement, scopes):
                 value = get_value(evaluate(value, scopes))
                 scope = next(scope for scope in scopes if var in scope)
                 scope[var] = gen_obj(value, scope[var].type)
+        case IfBlock(_, condition, body):
+            if any(get_value(evaluate(condition, scopes))):
+                execute(body, scopes)
         case tuple(statements):
             for statement in statements:
                 execute(statement, scopes)

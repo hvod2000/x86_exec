@@ -31,7 +31,7 @@ def print_variables(variables):
             if len(obj.value) > 1
             else str(obj.value[0])
         )
-        print(" ", var, "=", value, ":", obj.type)
+        print(":", var, "=", value, ":", obj.type)
 
 
 if len(sys.argv) == 1:
@@ -47,8 +47,7 @@ for source in sys.argv[1:]:
     source = Path(source).read_text()
     ast = parse(source)
     scope = DictWithMemory(typecheck(ast))
-    # print("scope", scope)
     for line in ast:
-        print(">", ast2str(line))
+        print("\n".join("> " + line for line in ast2str(line).split("\n")))
         execute(line, (scope,))
         print_variables(scope.get_updates())

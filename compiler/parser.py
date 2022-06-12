@@ -74,7 +74,7 @@ def parse(source, i=0):
 
 def parse_statements(tokens, i):
     statements = []
-    while tokens[i] != Token(None, "END"):
+    while tokens[i] != Token(None, "END") and tokens[i].literal != "DEINDENT":
         i, statement = parse_statement(tokens, i)
         statements.append(statement)
     return i, tuple(statements)
@@ -83,8 +83,19 @@ def parse_statements(tokens, i):
 def parse_statement(tokens, i):
     if tokens[i].literal == "while" and tokens[i + 1].literal not in ",=":
         return parse_while(tokens, i)
+    if tokens[i] == "if" and tokens[i + 1].literal not in ",=":
+        return parse_ifblock(tokens, i)
     return parse_assignment(tokens, i)
 
+def parse_ifblock(tokens, i):
+    assert tokens[i] == "if"
+    j, condition = parse_expression(tokens, i + 1)
+    if tokens[j] != "INDENT":
+        j, body = parse_statement(tokens, j)
+        return j, IfBlock(tokens[i].pos, condition, body)
+    j, body = parse_statements(tokens, j + 1)
+    assert tokens[j] == "DEINDENT"
+    return j + 1, IfBlock(tokens[i].pos, condition, body)
 
 def parse_assignment(tokens, i):
     i, variable = parse_variable(tokens, i)
@@ -149,7 +160,7 @@ def parse_comparison(tokens, i):
     if tokens[i].literal not in {"<=", "<", ">", ">=", "!=", "=="}:
         return i, result
     j, right = parse_arithmetic(tokens, i + 1)
-    return i, BinaryOperation(tokens[i].pos, tokens[i].liter, result, right)
+    return j, BinaryOperation(tokens[i].pos, tokens[i].literal, result, right)
 
 
 def parse_arithmetic(tokens, i):

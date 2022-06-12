@@ -14,6 +14,7 @@ Indexing = namedtuple("Indexing", "pos array index")
 
 Assignment = namedtuple("Aassignment", "pos variables values")
 WhileLoop = namedtuple("WhileLoop", "pos condition body")
+IfBlock = namedtuple("IfBlock", "pos condition body")
 
 # runtime
 Object = namedtuple("Object", "value type")

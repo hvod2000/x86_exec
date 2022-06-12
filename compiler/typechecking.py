@@ -85,6 +85,9 @@ def typecheck(programm, scopes=(), scope=None):
                 for var, typ in new_types.items():
                     value = scope[var].value if var in scope else (0,) * typ.elements
                     scope[var] = Object(value, typ)
+            case IfBlock(_, condition, body):
+                derive_type(condition, scopes)
+                typecheck(body, scopes[1:], scope)
             case _:
                 raise ValueError("0_0")
     return scope
