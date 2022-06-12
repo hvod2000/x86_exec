@@ -5,6 +5,7 @@ from printer import ast2str
 from executer import execute
 from typechecking import typecheck
 from pathlib import Path
+from contextlib import suppress
 
 import sys
 
@@ -36,11 +37,13 @@ def print_variables(variables):
 
 if len(sys.argv) == 1:
     scope = DictWithMemory()
-    while True:
-        ast = parse(input("> "))
-        typecheck(ast, scope=scope)
-        execute(ast, (scope,))
-        print_variables(scope.get_updates())
+    with suppress(EOFError):
+        while True:
+            ast = parse(input("> "))
+            typecheck(ast, scope=scope)
+            execute(ast, (scope,))
+            print_variables(scope.get_updates())
+    print()
 
 
 for source in sys.argv[1:]:
