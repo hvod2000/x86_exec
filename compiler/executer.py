@@ -7,8 +7,11 @@ LOGICAL = {"and", "or", "not"}
 def get_value(obj: Object):
     base = 256 ** (2**obj.type.byte_lvl)
     if obj.type.sign == "u":
-        return tuple(v % base for v in obj.value)
-    return tuple((v + base // 2) % base - base // 2 for v in obj.value)
+        values = [v % base for v in obj.value]
+    values = [(v + base // 2) % base - base // 2 for v in obj.value]
+    if obj.type.elements <= len(values):
+        return tuple(values[:obj.type.elements])
+    return tuple(values + [0] * (obj.type.elements - len(values)))
 
 def gen_obj(it, typ):
     return Object(get_value(Object(it, typ)), typ)

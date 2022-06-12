@@ -98,10 +98,10 @@ def parse_ifblock(tokens, i):
     return j + 1, IfBlock(tokens[i].pos, condition, body)
 
 def parse_assignment(tokens, i):
-    i, variable = parse_variable(tokens, i)
+    i, variable = parse_indexing(tokens, i)
     variables = [variable]
     while tokens[i] == ",":
-        i, variable = parse_variable(tokens, i + 1)
+        i, variable = parse_indexing(tokens, i + 1)
         variables.append(variable)
     if tokens[i].literal != "=":
         raise DslSyntaxError(tokens[i].pos, '"=" was expected here')
@@ -128,7 +128,7 @@ def parse_expression(tokens, i):
     i, expr = parse_dijunction(tokens, i)
     if tokens[i] != ":":
         return i, expr
-    j, typ = parse_variable(tokens, i + 1)
+    j, typ = parse_indexing(tokens, i + 1)
     return j, TypeCast(tokens[i].pos, expr, typ)
 
 

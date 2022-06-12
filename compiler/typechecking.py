@@ -63,9 +63,14 @@ def derive_type(expression, scopes):
                     return Type(*map(max, zip(x, y)))
         case UnaryOperation(_, _, argument):
             return derive_type(argument, scopes)
-        case TypeCast(_, _, typ):
-            assert typ.name[0] in "iu"
-            return Type(typ.name[0], 1, ilog((int(typ.name[1:]) + 7) // 8, 2))
+        case TypeCast(_, expr, typ):
+            derive_type(expr, scopes)
+            var = typ.name if isinstance(typ, Variable) else typ.array.name
+            assert var[0] in "iu"
+            sign = var[0]
+            byte_lvl = ilog((int(var[1:]) + 7) // 8, 2)
+            elements = int(typ.index.value) if isinstance(typ, Indexing) else 1
+            return Type(sign, elements, byte_lvl)
         case Indexing(_, array, index):
             array = derive_type(array, scopes)
             index = derive_type(index, scopes)
