@@ -244,4 +244,12 @@ def parse_indexing(tokens, i):
 
 
 def parse_while(tokens, i):
-    raise NotImplementedError()
+    assert tokens[i] == "while"
+    j, condition = parse_expression(tokens, i + 1)
+    if tokens[j] != "INDENT":
+        j, body = parse_statement(tokens, j)
+        return j, WhileLoop(tokens[i].pos, condition, body)
+    j, body = parse_statements(tokens, j + 1)
+    assert tokens[j] == "DEINDENT"
+    return j + 1, WhileLoop(tokens[i].pos, condition, body)
+

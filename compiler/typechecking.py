@@ -88,6 +88,9 @@ def typecheck(programm, scopes=(), scope=None):
             case IfBlock(_, condition, body):
                 derive_type(condition, scopes)
                 typecheck(body, scopes[1:], scope)
+            case WhileLoop(_, condition, body):
+                derive_type(condition, scopes)
+                typecheck(body, scopes[1:], scope)
             case _:
                 raise ValueError("0_0")
     return scope
