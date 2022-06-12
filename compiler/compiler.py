@@ -1,8 +1,18 @@
 from nodes import *
-from typechecking import derive_type, Type, typecheck
+from typechecking import derive_type, Type, typecheck, unify_types
 from itertools import zip_longest
 
 LOGICAL = {"and", "or", "not"}
+
+UNIQUE_ID_COUNTER = hash(None) % (10**6)
+
+
+def get_uid():
+    global UNIQUE_ID_COUNTER
+    uid = str(UNIQUE_ID_COUNTER).zfill(6)
+    UNIQUE_ID_COUNTER += 1
+    return uid
+
 
 def get_value(obj: Object):
     base = 256 ** (2**obj.type.byte_lvl)
@@ -10,11 +20,13 @@ def get_value(obj: Object):
         values = [v % base for v in obj.value]
     values = [(v + base // 2) % base - base // 2 for v in obj.value]
     if obj.type.elements <= len(values):
-        return tuple(values[:obj.type.elements])
+        return tuple(values[: obj.type.elements])
     return tuple(values + [0] * (obj.type.elements - len(values)))
+
 
 def gen_obj(it, typ):
     return Object(get_value(Object(it, typ)), typ)
+
 
 def compile_get(var, typ):
     var = compile_var_name(var)
@@ -27,12 +39,41 @@ def compile_get(var, typ):
         return f"lea si, {var}\nmov ax, [si]\nadd si, 2\n" + "mov dx, [si]\npush dx\npush ax"
     raise NotImplementedError()
 
+def compile_compare(typ, operation):
+    assert typ.elements == 1
+    label = "l" + get_uid()
+    end = f"mov ax, 0\npush ax\njmp {label}_end\n" + f"{label}_true:\nmov ax, 1\npush ax\n" + f"{label}_end:\n"
+    if typ.byte_lvl < 2:
+        cmp = "pop ax\npop bx\n"
+        cmp += "cmp al, bl\n" if typ.byte_lvl == 0 else "cmp ax, bx\n"
+        match (operation, typ.sign):
+            case "!=", _:
+                return cmp + f"jne {label}_true\n" + end
+            case "==", _:
+                return cmp + f"je {label}_true\n" + end
+            case ">", "i":
+                return cmp + f"jg {label}_true\n" + end
+            case ">=", "i":
+                return cmp + f"jge {label}_true\n" + end
+            case "<", "i":
+                return cmp + f"jl {label}_true\n" + end
+            case "<=", "i":
+                return cmp + f"jle {label}_true\n" + end
+            case ">", "u":
+                return cmp + f"ja {label}_true\n" + end
+            case ">=", "u":
+                return cmp + f"jae {label}_true\n" + end
+            case "<", "u":
+                return cmp + f"jb {label}_true\n" + end
+            case "<=", "u":
+                return cmp + f"jbe {label}_true\n" + end
+    raise NotImplementedError
+
 def compile_expression(expression, scopes):
     typ = derive_type(expression, scopes)
     match expression:
         case Byte(_, value) | Number(_, value):
-            raise NotImplementedError()
-            return Object((int(value),), typ)
+            return f"mov al, {value}\npush ax\n"
         case Array(pos, items):
             raise NotImplementedError()
             items = tuple(get_value(compile_expression(item, scopes))[0] for item in items)
@@ -48,9 +89,9 @@ def compile_expression(expression, scopes):
             raise NotImplementedError()
             x = get_value(compile_expression(x, scopes))
             if all(x) and operation == "or":
-                return Object((1,)*typ.elements , typ)
+                return Object((1,) * typ.elements, typ)
             if not any(x) and operation == "and":
-                return Object((0,)*typ.elements, typ)
+                return Object((0,) * typ.elements, typ)
             y = get_value(compile_expression(y, scopes))
             if operation == "or":
                 xy = zip_longest(x, y, fillvalue=0)
@@ -62,12 +103,12 @@ def compile_expression(expression, scopes):
             x, y = (compile_expression(z, scopes) for z in (x, y))
             match operation:
                 case "+":
-                    assert typ == x_type == y_type
                     assert typ.elements == 1
+                    xy = ( (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ)))
                     if typ.byte_lvl == 0:
-                        return y + x + "pop ax\npop bx\nadd al, bl\npush ax\n"
+                        return xy + "pop ax\npop bx\nadd al, bl\npush ax\n"
                     if typ.byte_lvl == 1:
-                        return y + x + "pop ax\npop bx\nadd ax, bx\npush ax\n"
+                        return xy + "pop ax\npop bx\nadd ax, bx\npush ax\n"
                     raise NotImplementedError()
                 case "-":
                     raise NotImplementedError()
@@ -81,35 +122,18 @@ def compile_expression(expression, scopes):
                     raise NotImplementedError()
                     xy = zip_longest(x, y, fillvalue=1)
                     return gen_obj([x // y for x, y in xy], typ)
-                case ">":
-                    raise NotImplementedError()
-                    xy = zip_longest(x, y, fillvalue=0)
-                    return gen_obj([x > y for x, y in xy], typ)
-                case ">=":
-                    raise NotImplementedError()
-                    xy = zip_longest(x, y, fillvalue=0)
-                    return gen_obj([x >= y for x, y in xy], typ)
-                case "<=":
-                    raise NotImplementedError()
-                    xy = zip_longest(x, y, fillvalue=0)
-                    return gen_obj([x <= y for x, y in xy], typ)
-                case "<":
-                    raise NotImplementedError()
-                    xy = zip_longest(x, y, fillvalue=0)
-                    return gen_obj([x < y for x, y in xy], typ)
-                case "!=":
-                    raise NotImplementedError()
-                    xy = zip_longest(x, y, fillvalue=0)
-                    return gen_obj([x != y for x, y in xy], typ)
+                case cmp if cmp in {">", ">=", "<", "<=", "!=", "=="}:
+                    typ = unify_types(x_type, y_type)
+                    return ( (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ)) + compile_compare(typ, cmp))
                 case op:
                     raise Exception(f"unsupported operation: {op}")
         case UnaryOperation(_, operation, argument):
-            raise NotImplementedError()
             x = compile_expression(argument, scopes)
             match operation:
                 case "(":
                     return x
                 case "-":
+                    raise NotImplementedError()
                     return gen_obj(tuple(-x for x in get_value(x)), typ)
                 case op:
                     raise Exception(f"unsupported operation: {op}")
@@ -117,10 +141,18 @@ def compile_expression(expression, scopes):
             raise NotImplementedError()
             return gen_obj(get_value(compile_expression(expr, scopes)), typ)
         case Indexing(_, array, index):
-            raise NotImplementedError()
-            array = get_value(compile_expression(array, scopes))
-            index = get_value(compile_expression(index, scopes))
-            return gen_obj([array[i] for i in index], typ)
+            arr_type = derive_type(array, scopes)
+            ind_type = derive_type(index, scopes)
+            assert ind_type.elements == 1
+            assert ind_type.byte_lvl == 0
+            var = compile_var_name(array.name)
+            _, elements, byte_lvl = next(scope[var].type for scope in scopes if var in scope)
+            index_push = compile_expression(index, scopes)
+            get_target = index_push + f"lea si, {var}\npop ax\nmov ah, 0\n" + "add si, ax\n" * (2**byte_lvl)
+            load = ["mov al, [si]", "mov ax, [si]"][byte_lvl] + "\n"
+            push = ["push ax", "push ax", "push dx\push ax"][byte_lvl] + "\n"
+            return get_target + load + push
+
 
 def compile_statement(statement, scopes):
     match statement:
@@ -155,14 +187,38 @@ def compile_statement(statement, scopes):
             if any(get_value(compile_expression(condition, scopes))):
                 compile_statement(body, scopes)
         case WhileLoop(_, condition, body):
-            raise NotImplementedError()
-            while any(get_value(compile_expression(condition, scopes))):
-                compile_statement(body, scopes)
+            uid = get_uid()
+            _, elements, byte_lvl = derive_type(condition, scopes)
+            assert elements == 1
+            assert byte_lvl == 0
+            return (
+                f"l{uid}:\n"
+                + compile_expression(condition, scopes)
+                + "pop ax\ntest al, al\n"
+                + f"jnz l{uid}_body\njmp l{uid}_end\n"
+                + (f"l{uid}_body:\n" + compile_statements(body, scopes) + f"jmp l{uid}\nl{uid}_end:\n")
+            )
         case unsupported_thing:
             raise Exception(f"{unsupported_thing}")
 
+
+def compile_cast(typ1, typ2):
+    assert typ1.elements == 1
+    assert typ2.elements == 1
+    if typ1.byte_lvl == typ2.byte_lvl:
+        return ""
+    if typ1.byte_lvl < typ2.byte_lvl:
+        return {
+                ("s", 0, 1) : "pop ax\ncbw\npush ax\n",
+                ("u", 0, 1) : "pop ax\nmov ah, 0\npush ax\n",
+                ("s", 1, 2) : "pop ax\ncwd\npush dx\npush ax\n",
+                ("u", 1, 2) : "pop ax\nmov dx, 0\npush dx\npush ax\n",
+                }[typ1.sign, typ1.byte_lvl, typ2.byte_lvl]
+    raise NotImplementedError()
+
 def compile_var_name(variable):
     return "".join(char if char == char.lower() else "big_" + char.lower() for char in variable)
+
 
 def compile_scope(scope):
     code = []
@@ -170,15 +226,17 @@ def compile_scope(scope):
         _, elements, byte_lvl = obj.type
         typ = ["db", "dw", "dd"][byte_lvl]
         var = compile_var_name(var)
-        value =                        ",".join("0" for _ in range(elements))
+        value = ",".join("0" for _ in range(elements))
         code.append(f"{var} {typ} " + value + "\n")
     return "".join(code)
+
 
 def compile_statements(statements, scopes):
     code = []
     for statement in statements:
         code.append(compile_statement(statement, scopes))
     return "".join(code)
+
 
 def prettify_assembly(assembly: str):
     lines = []
@@ -187,6 +245,7 @@ def prettify_assembly(assembly: str):
             line = "\t" + line
         lines.append(line)
     return "\n".join(lines)
+
 
 def compile(program):
     scope = typecheck(program)

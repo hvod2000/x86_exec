@@ -24,7 +24,7 @@ def unify_types(typ, *types):
 
 
 def classify_number(number):
-    sign = "i" if number < 0 or number.bit_length() % 8 else "u"
+    sign = "i" if number <= 0 or number.bit_length() % 8 else "u"
     bits, byte_lvl = number.bit_length(), 0
     while 8 * 2**byte_lvl < bits:
         byte_lvl += 1
