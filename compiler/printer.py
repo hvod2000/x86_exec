@@ -22,13 +22,16 @@ def ast2str(node):
             return "[" + ", ".join(map(ast2str, items)) + "]"
         case TypeCast(_, expr, typ):
             return ast2str(expr) + " : " + ast2str(typ)
+        case IfBlock(_, condition, body):
+            body = ("    " + line for line in ast2str(body).split("\n"))
+            return "if " + ast2str(condition) + "\n" + "\n".join(body)
+        case WhileLoop(_, condition, body):
+            body = ("    " + line for line in ast2str(body).split("\n"))
+            return "while " + ast2str(condition) + "\n" + "\n".join(body)
         case Assignment(pos=_, variables=vrbls, values=vals):
             vrbls = ", ".join(map(ast2str, vrbls))
             vals = ", ".join(map(ast2str, vals))
             return f"{vrbls} = {vals}"
-        case IfBlock(_, condition, body):
-            body = ("    " + line for line in ast2str(body).split("\n"))
-            return "if " + ast2str(condition) + "\n" + "\n".join(body)
         case tuple(xs):
             return "\n".join(map(ast2str, xs))
         case unrecognized_shit:

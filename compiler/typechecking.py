@@ -81,7 +81,8 @@ def typecheck(programm, scopes=(), scope=None):
             case Assignment(_, variables, expressions):
                 new_types = {}
                 for var, expr in zip(variables, expressions):
-                    new_types[var.name] = derive_type(expr, scopes)
+                    var = var.name if isinstance(var, Variable) else var.array.name
+                    new_types[var] = derive_type(expr, scopes)
                 for var, typ in new_types.items():
                     value = scope[var].value if var in scope else (0,) * typ.elements
                     scope[var] = Object(value, typ)

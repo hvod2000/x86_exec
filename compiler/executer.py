@@ -87,10 +87,20 @@ def evaluate(expression, scopes):
 def execute(statement, scopes):
     match statement:
         case Assignment(_, variables, values):
-            for (_, var), value in zip(variables, values):
+            for target, value in zip(variables, values):
                 value = get_value(evaluate(value, scopes))
+                var = target.name if isinstance(target, Variable) else target.array.name
                 scope = next(scope for scope in scopes if var in scope)
-                scope[var] = gen_obj(value, scope[var].type)
+                if isinstance(target, Variable):
+                    scope[var] = gen_obj(value, scope[var].type)
+                else:
+                    assert len(value) == 1
+                    indexes = get_value(evaluate(target.index, scopes))
+                    array = list(get_value(scope[var]))
+                    value = value[0]
+                    for index in indexes:
+                        array[index] = value
+                    scope[var] = gen_obj(array, scope[var].type)
         case IfBlock(_, condition, body):
             if any(get_value(evaluate(condition, scopes))):
                 execute(body, scopes)
