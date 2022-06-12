@@ -2,8 +2,8 @@ from nodes import *
 from typechecking import derive_type, Type, typecheck, unify_types
 from itertools import zip_longest
 
+REGISTERS = {"ax", "bx", "al", "bl"}
 LOGICAL = {"and", "or", "not"}
-
 UNIQUE_ID_COUNTER = hash(None) % (10**6)
 
 
@@ -254,8 +254,40 @@ def prettify_assembly(assembly: str):
         lines.append(line)
     return "\n".join(lines)
 
+def optimize_assembly(assembly: str):
+    lines = ["START"]
+    unprocessed_lines = list(reversed(assembly.split("\n")))
+    while unprocessed_lines:
+        line = unprocessed_lines.pop()
+        if line.startswith("pop") and lines[-1].startswith("push"):
+            x = line.removeprefix("pop ")
+            y = lines[-1].removeprefix("push ")
+            if x[-1] == y[-1]:
+                lines.pop()
+                unprocessed_lines.append(f"mov {x}, {y}")
+                continue
+        if line.startswith("mov") and lines[-1].startswith("mov"):
+            x, y1 = line.removeprefix("mov ").split(", ")
+            y2, z = lines[-1].removeprefix("mov ").split(", ")
+            if (
+                y1 == y2
+                and y1 in REGISTERS
+                and (z in REGISTERS or x in REGISTERS)
+            ):
+                lines.pop()
+                unprocessed_lines.append(f"mov {x}, {z}")
+                continue
+        if line.startswith("mov"):
+            x, y = line.removeprefix("mov ").split(", ")
+            if x == y:
+                continue
+        lines.append(line)
+    return "\n".join(lines[1:])
 
-def compile(program):
+
+def compile(program, optimize=True):
     scope = typecheck(program)
     code = "jmp begin\n" + compile_scope(scope) + "begin:\n" + compile_statements(program, (scope,)) + "halt:jmp halt;$E\n"
+    if optimize:
+        code = optimize_assembly(code)
     return prettify_assembly(code)

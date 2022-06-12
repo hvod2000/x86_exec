@@ -15,7 +15,7 @@ def print_variables(variables):
             if len(obj.value) > 1
             else str(obj.value[0])
         )
-        print(";", var, "=", value, ":", obj.type)
+        print(";", var, ":", obj.type)
 
 for source in sys.argv[1:]:
     source = Path(source).read_text()
