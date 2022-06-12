@@ -58,34 +58,47 @@ def compile_expression(expression, scopes):
             xy = zip_longest(x, y, fillvalue=1)
             return gen_obj([bool(x and y) for x, y in xy], typ)
         case BinaryOperation(pos, operation, x, y):
-            raise NotImplementedError()
-            x, y = (get_value(compile_expression(z, scopes)) for z in (x, y))
+            x_type, y_type = (derive_type(z, scopes) for z in (x, y))
+            x, y = (compile_expression(z, scopes) for z in (x, y))
             match operation:
                 case "+":
-                    xy = zip_longest(x, y, fillvalue=0)
-                    return gen_obj([x + y for x, y in xy], typ)
+                    assert typ == x_type == y_type
+                    assert typ.elements == 1
+                    if typ.byte_lvl == 0:
+                        return y + x + "pop ax\npop bx\nadd al, bl\npush ax\n"
+                    if typ.byte_lvl == 1:
+                        return y + x + "pop ax\npop bx\nadd ax, bx\npush ax\n"
+                    raise NotImplementedError()
                 case "-":
+                    raise NotImplementedError()
                     xy = zip_longest(x, y, fillvalue=0)
                     return gen_obj([x - y for x, y in xy], typ)
                 case "*":
+                    raise NotImplementedError()
                     xy = zip_longest(x, y, fillvalue=1)
                     return gen_obj([x * y for x, y in xy], typ)
                 case "/":
+                    raise NotImplementedError()
                     xy = zip_longest(x, y, fillvalue=1)
                     return gen_obj([x // y for x, y in xy], typ)
                 case ">":
+                    raise NotImplementedError()
                     xy = zip_longest(x, y, fillvalue=0)
                     return gen_obj([x > y for x, y in xy], typ)
                 case ">=":
+                    raise NotImplementedError()
                     xy = zip_longest(x, y, fillvalue=0)
                     return gen_obj([x >= y for x, y in xy], typ)
                 case "<=":
+                    raise NotImplementedError()
                     xy = zip_longest(x, y, fillvalue=0)
                     return gen_obj([x <= y for x, y in xy], typ)
                 case "<":
+                    raise NotImplementedError()
                     xy = zip_longest(x, y, fillvalue=0)
                     return gen_obj([x < y for x, y in xy], typ)
                 case "!=":
+                    raise NotImplementedError()
                     xy = zip_longest(x, y, fillvalue=0)
                     return gen_obj([x != y for x, y in xy], typ)
                 case op:
