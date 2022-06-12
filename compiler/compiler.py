@@ -175,7 +175,7 @@ def compile_statement(statement, scopes):
                     _, elements, byte_lvl = scope[var].type
                     var = compile_var_name(target.array.name)
                     index_push = compile_expression(target.index, scopes)
-                    get_target = index_push + f"lea si, {var}\npop ax\nmov ah, 0\nadd si, ax"
+                    get_target = index_push + f"lea si, {var}\npop ax\nmov ah, 0\nadd si, ax\n"
                     pop = ["pop ax", "pop ax", "pop ax\npop dx"][byte_lvl] + "\n"
                     move = ["mov [si], al", "mov [si], ax"][byte_lvl] + "\n"
                     code.append(get_target + pop + move)
@@ -183,20 +183,28 @@ def compile_statement(statement, scopes):
         case Declaration(_, _, _):
             return ""
         case IfBlock(_, condition, body):
-            raise NotImplementedError()
-            if any(get_value(compile_expression(condition, scopes))):
-                compile_statement(body, scopes)
-        case WhileLoop(_, condition, body):
-            uid = get_uid()
+            label = "if" + get_uid()
             _, elements, byte_lvl = derive_type(condition, scopes)
             assert elements == 1
             assert byte_lvl == 0
             return (
-                f"l{uid}:\n"
+                f"{label}:\n"
                 + compile_expression(condition, scopes)
                 + "pop ax\ntest al, al\n"
-                + f"jnz l{uid}_body\njmp l{uid}_end\n"
-                + (f"l{uid}_body:\n" + compile_statements(body, scopes) + f"jmp l{uid}\nl{uid}_end:\n")
+                + f"jnz {label}_body\njmp {label}_end\n"
+                + (f"{label}_body:\n" + compile_statements(body, scopes) + f"{label}_end:\n")
+            )
+        case WhileLoop(_, condition, body):
+            label = "while" + get_uid()
+            _, elements, byte_lvl = derive_type(condition, scopes)
+            assert elements == 1
+            assert byte_lvl == 0
+            return (
+                f"{label}:\n"
+                + compile_expression(condition, scopes)
+                + "pop ax\ntest al, al\n"
+                + f"jnz {label}_body\njmp {label}_end\n"
+                + (f"{label}_body:\n" + compile_statements(body, scopes) + f"jmp {label}\n{label}_end:\n")
             )
         case unsupported_thing:
             raise Exception(f"{unsupported_thing}")
