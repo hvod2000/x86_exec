@@ -1,0 +1,13 @@
+#!/bin/python3
+
+from parser import parse
+from compiler import compile
+from pathlib import Path
+from contextlib import suppress
+
+import sys
+
+for source in sys.argv[1:]:
+    source = Path(source).read_text()
+    ast = parse(source)
+    print(compile(ast))
