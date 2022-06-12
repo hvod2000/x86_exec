@@ -16,6 +16,7 @@ Declaration = namedtuple("Declaration", "pos variable type")
 Assignment = namedtuple("Aassignment", "pos variables values")
 WhileLoop = namedtuple("WhileLoop", "pos condition body")
 IfBlock = namedtuple("IfBlock", "pos condition body")
+IfElseBlock = namedtuple("IfElseBlock", "pos condition then_body else_body")
 
 # runtime
 Object = namedtuple("Object", "value type")

@@ -25,6 +25,10 @@ def ast2str(node):
         case IfBlock(_, condition, body):
             body = ("    " + line for line in ast2str(body).split("\n"))
             return "if " + ast2str(condition) + "\n" + "\n".join(body)
+        case IfElseBlock(_, condition, body1, body2):
+            body1 = ("    " + line for line in ast2str(body1).split("\n"))
+            body2 = ("    " + line for line in ast2str(body2).split("\n"))
+            return "if " + ast2str(condition) + "\n" + "\n".join(body1) + "\nelse\n" + "\n".join(body2) + "\n"
         case WhileLoop(_, condition, body):
             body = ("    " + line for line in ast2str(body).split("\n"))
             return "while " + ast2str(condition) + "\n" + "\n".join(body)

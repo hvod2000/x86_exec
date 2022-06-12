@@ -119,6 +119,11 @@ def execute(statement, scopes):
         case IfBlock(_, condition, body):
             if any(get_value(evaluate(condition, scopes))):
                 execute(body, scopes)
+        case IfElseBlock(_, condition, body1, body2):
+            if any(get_value(evaluate(condition, scopes))):
+                execute(body1, scopes)
+            else:
+                execute(body2, scopes)
         case WhileLoop(_, condition, body):
             while any(get_value(evaluate(condition, scopes))):
                 execute(body, scopes)

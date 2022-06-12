@@ -98,11 +98,14 @@ def parse_statement(tokens, i):
 def parse_ifblock(tokens, i):
     assert tokens[i] == "if"
     j, condition = parse_expression(tokens, i + 1)
-    if tokens[j] != "INDENT":
-        j, body = parse_statement(tokens, j)
-        return j, IfBlock(tokens[i].pos, condition, body)
+    assert tokens[j] == "INDENT"
     j, body = parse_statements(tokens, j + 1)
     assert tokens[j] == "DEINDENT"
+    if tokens[j + 1] == "else":
+        assert tokens[j + 2] == "INDENT"
+        j, else_body = parse_statements(tokens, j + 3)
+        assert tokens[j] == "DEINDENT"
+        return j + 1, IfElseBlock(tokens[i].pos, condition, body, else_body)
     return j + 1, IfBlock(tokens[i].pos, condition, body)
 
 

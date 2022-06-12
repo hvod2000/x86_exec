@@ -87,19 +87,34 @@ def compile_expression(expression, scopes):
             raise NotImplementedError()
         case Application(_):
             raise NotImplementedError()
-        case BinaryOperation(pos, operation, x, y) if operation in LOGICAL:
-            raise NotImplementedError()
-            x = get_value(compile_expression(x, scopes))
-            if all(x) and operation == "or":
-                return Object((1,) * typ.elements, typ)
-            if not any(x) and operation == "and":
-                return Object((0,) * typ.elements, typ)
-            y = get_value(compile_expression(y, scopes))
-            if operation == "or":
-                xy = zip_longest(x, y, fillvalue=0)
-                return gen_obj([bool(x or y) for x, y in xy], typ)
-            xy = zip_longest(x, y, fillvalue=1)
-            return gen_obj([bool(x and y) for x, y in xy], typ)
+        case BinaryOperation(pos, "and", x, y):
+            x_type, y_type = (derive_type(z, scopes) for z in (x, y))
+            label = "and" + get_uid()
+            assert x_type.elements == 1 and x_type.byte_lvl == 0
+            assert y_type.elements == 1 and y_type.byte_lvl == 0
+            return (
+                f"{label}:\n"
+                + compile_expression(x, scopes)
+                + f"pop ax\ncmp al, 0\njne {label}_arg2\njmp {label}_false\n"
+                + f"{label}_arg2:\n"
+                + compile_expression(y, scopes)
+                + f"pop ax\ncmp al, 0\njne {label}_true\n"
+                + f"{label}_false:\nmov ax, 0\npush ax\njmp {label}_end\n" + f"{label}_true:\nmov ax, 1\npush ax\n" + f"{label}_end:\n"
+            )
+        case BinaryOperation(pos, "or", x, y):
+            x_type, y_type = (derive_type(z, scopes) for z in (x, y))
+            label = "or" + get_uid()
+            assert x_type.elements == 1 and x_type.byte_lvl == 0
+            assert y_type.elements == 1 and y_type.byte_lvl == 0
+            return (
+                f"{label}:\n"
+                + compile_expression(x, scopes)
+                + f"pop ax\ncmp al, 0\nje {label}_arg2\njmp {label}_true\n"
+                + f"{label}_arg2:\n"
+                + compile_expression(y, scopes)
+                + f"pop ax\ncmp al, 0\njne {label}_true\n"
+                + f"{label}_false:\nmov ax, 0\npush ax\njmp {label}_end\n" + f"{label}_true:\nmov ax, 1\npush ax\n" + f"{label}_end:\n"
+            )
         case BinaryOperation(pos, operation, x, y):
             x_type, y_type = (derive_type(z, scopes) for z in (x, y))
             x, y = (compile_expression(z, scopes) for z in (x, y))
@@ -113,6 +128,12 @@ def compile_expression(expression, scopes):
                         return xy + "pop ax\npop bx\nadd ax, bx\npush ax\n"
                     raise NotImplementedError()
                 case "-":
+                    assert typ.elements == 1
+                    xy = (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ))
+                    if typ.byte_lvl == 0:
+                        return xy + "pop ax\npop bx\nsub al, bl\npush ax\n"
+                    if typ.byte_lvl == 1:
+                        return xy + "pop ax\npop bx\nsub ax, bx\npush ax\n"
                     raise NotImplementedError()
                     xy = zip_longest(x, y, fillvalue=0)
                     return gen_obj([x - y for x, y in xy], typ)
@@ -192,9 +213,22 @@ def compile_statement(statement, scopes):
             return (
                 f"{label}:\n"
                 + compile_expression(condition, scopes)
-                + "pop ax\ntest al, al\n"
-                + f"jnz {label}_body\njmp {label}_end\n"
+                + "pop ax\ncmp al, 0\n"
+                + f"jne {label}_body\njmp {label}_end\n"
                 + (f"{label}_body:\n" + compile_statements(body, scopes) + f"{label}_end:\n")
+            )
+        case IfElseBlock(_, condition, body1, body2):
+            label = "if" + get_uid()
+            _, elements, byte_lvl = derive_type(condition, scopes)
+            assert elements == 1
+            assert byte_lvl == 0
+            return (
+                f"{label}:\n"
+                + compile_expression(condition, scopes)
+                + "pop ax\ncmp al, 0\n"
+                + f"jne {label}_then\njmp {label}_else\n"
+                + (f"{label}_then:\n" + compile_statements(body1, scopes) + f"jmp {label}_end\n")
+                + (f"{label}_else:\n" + compile_statements(body2, scopes) + f"{label}_end:\n")
             )
         case WhileLoop(_, condition, body):
             label = "while" + get_uid()
@@ -204,8 +238,8 @@ def compile_statement(statement, scopes):
             return (
                 f"{label}:\n"
                 + compile_expression(condition, scopes)
-                + "pop ax\ntest al, al\n"
-                + f"jnz {label}_body\njmp {label}_end\n"
+                + "pop ax\ncmp al, 0\n"
+                + f"jne {label}_body\njmp {label}_end\n"
                 + (f"{label}_body:\n" + compile_statements(body, scopes) + f"jmp {label}\n{label}_end:\n")
             )
         case unsupported_thing:

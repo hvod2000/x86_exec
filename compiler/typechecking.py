@@ -111,6 +111,10 @@ def typecheck(programm, scopes=(), scope=None):
             case IfBlock(_, condition, body):
                 derive_type(condition, scopes)
                 typecheck(body, scopes[1:], scope)
+            case IfElseBlock(_, condition, body1, body2):
+                derive_type(condition, scopes)
+                typecheck(body1, scopes[1:], scope)
+                typecheck(body2, scopes[1:], scope)
             case WhileLoop(_, condition, body):
                 derive_type(condition, scopes)
                 typecheck(body, scopes[1:], scope)
