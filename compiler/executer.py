@@ -9,7 +9,8 @@ def get_value(obj: Object):
     base = 256 ** (2**obj.type.byte_lvl)
     if obj.type.sign == "u":
         values = [v % base for v in obj.value]
-    values = [(v + base // 2) % base - base // 2 for v in obj.value]
+    else:
+        values = [(v + base // 2) % base - base // 2 for v in obj.value]
     if obj.type.elements <= len(values):
         return tuple(values[: obj.type.elements])
     return tuple(values + [0] * (obj.type.elements - len(values)))
