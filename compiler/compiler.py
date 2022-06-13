@@ -138,9 +138,18 @@ def compile_expression(expression, scopes):
                     xy = zip_longest(x, y, fillvalue=0)
                     return gen_obj([x - y for x, y in xy], typ)
                 case "*":
+                    xy = (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ))
+                    if typ.sign == 'u':
+                        if typ.byte_lvl == 0:
+                            return xy + "pop ax\npop bx\nmov ah, 0\nmul bl\npush ax\n"
+                        if typ.byte_lvl == 1:
+                            return xy + "pop ax\npop bx\nmov dx, 0\nmul bx\npush ax\n"
+                    else:
+                        if typ.byte_lvl == 0:
+                            return xy + "pop ax\npop bx\ncbw\nimul bl\npush ax\n"
+                        if typ.byte_lvl == 1:
+                            return xy + "pop ax\npop bx\ncwd\nimul bx\npush ax\n"
                     raise NotImplementedError()
-                    xy = zip_longest(x, y, fillvalue=1)
-                    return gen_obj([x * y for x, y in xy], typ)
                 case "%":
                     xy = (y + compile_cast(y_type, typ)) + (x + compile_cast(x_type, typ))
                     if typ.sign == 'u':
@@ -275,9 +284,9 @@ def compile_cast(typ1, typ2):
         return ""
     if typ1.byte_lvl < typ2.byte_lvl:
         return {
-            ("s", 0, 1): "pop ax\ncbw\npush ax\n",
+            ("i", 0, 1): "pop ax\ncbw\npush ax\n",
             ("u", 0, 1): "pop ax\nmov ah, 0\npush ax\n",
-            ("s", 1, 2): "pop ax\ncwd\npush dx\npush ax\n",
+            ("i", 1, 2): "pop ax\ncwd\npush dx\npush ax\n",
             ("u", 1, 2): "pop ax\nmov dx, 0\npush dx\npush ax\n",
         }[typ1.sign, typ1.byte_lvl, typ2.byte_lvl]
     raise NotImplementedError()
